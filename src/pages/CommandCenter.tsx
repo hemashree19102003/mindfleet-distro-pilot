@@ -1,269 +1,199 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
-  Sparkles, Send, CheckCircle, Edit3, XCircle, HelpCircle,
-  AlertTriangle, Clock, FileText, Activity, Zap, Package,
-  TrendingUp, ChevronDown, ChevronUp, IndianRupee, Users, MapPin
+  Sparkles, Send, CheckCircle, AlertTriangle, Clock,
+  FileText, Activity, Zap, Package, TrendingUp, IndianRupee,
+  Users, MapPin, Bot
 } from "lucide-react";
+import { useChatStore, useDraftStore, useUserStore } from "@/store";
+import DraftCard from "@/components/shared/DraftCard";
+import StatusBadge from "@/components/shared/StatusBadge";
 
 const CommandCenter = () => {
   const [activeTab, setActiveTab] = useState<"today" | "drafts" | "warnings" | "recent">("today");
-  const [planApproved, setPlanApproved] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { messages, isTyping, sendMessage } = useChatStore();
+  const { drafts } = useDraftStore();
+  const { currentUser } = useUserStore();
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    sendMessage(input, currentUser);
+    setInput("");
+  };
+
+  const pendingDrafts = drafts.filter(d => d.status === 'DRAFT');
 
   return (
-    <div className="flex gap-5 h-[calc(100vh-7rem)]">
-      {/* Chat Section - 70% */}
-      <div className="flex flex-1 flex-col rounded-2xl border border-border bg-card overflow-hidden shadow-sm" style={{ flex: "7" }}>
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-7rem)]">
+      {/* ── Chat Section ── */}
+      <div className="flex flex-col rounded-2xl border border-purple-100 bg-white overflow-hidden shadow-sm lg:flex-[7]">
         {/* Chat Header */}
-        <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10">
-            <Sparkles className="h-4.5 w-4.5 text-accent" />
+        <div className="flex items-center gap-3 border-b border-purple-100 px-4 md:px-6 py-4 shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
+            <Sparkles className="h-4.5 w-4.5 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Command Center</h2>
-            <p className="text-[11px] text-muted-foreground">AI-assisted operational control</p>
+            <h2 className="text-sm font-semibold text-gray-900">Command Center</h2>
+            <p className="text-[11px] text-gray-500">AI-assisted operational control</p>
           </div>
-          <span className="ml-auto flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 text-[10px] font-semibold text-accent">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse-soft" />
+          <span className="ml-auto flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-1 text-[10px] font-semibold text-purple-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-600 animate-pulse-soft" />
             AI Active
           </span>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          {/* User Message */}
-          <div className="flex justify-end">
-            <div className="max-w-md rounded-2xl rounded-br-md bg-primary px-5 py-3 text-sm text-primary-foreground shadow-sm">
-              Plan today's dispatch for 17 Feb
-            </div>
-          </div>
-
-          {/* AI Response */}
-          <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 mt-1">
-              <Sparkles className="h-4 w-4 text-accent" />
-            </div>
-            <div className="space-y-3 max-w-2xl flex-1">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Here's the draft dispatch plan based on today's demand forecast, staff availability, and inventory levels:
-              </p>
-
-              {/* Draft Card — Hero */}
-              <div className={`rounded-2xl border-2 p-6 animate-fade-in transition-all duration-300 ${
-                planApproved
-                  ? "border-success/40 bg-success/5 shadow-[0_0_24px_-6px_hsl(152_60%_40%/0.2)]"
-                  : "border-ai-border bg-ai-bg ai-glow"
-              }`}>
-                <div className="flex items-center gap-2 mb-5">
-                  <Sparkles className="h-4 w-4 text-accent" />
-                  <h3 className="font-semibold text-foreground">Draft Dispatch Plan – 17 Feb</h3>
-                  {planApproved && (
-                    <span className="ml-auto flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-0.5 text-[10px] font-semibold text-success">
-                      <CheckCircle className="h-3 w-3" /> Approved
-                    </span>
-                  )}
-                </div>
-
-                {/* Summary Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-                  {[
-                    { label: "Shops Assigned", value: "428", icon: MapPin },
-                    { label: "Staff Active", value: "12", icon: Users },
-                    { label: "Est. Distance", value: "312 km", icon: TrendingUp },
-                    { label: "SLA Risks", value: "4", icon: AlertTriangle, warn: true },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-xl bg-card p-3 border border-border">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <item.icon className={`h-3 w-3 ${item.warn ? "text-warning" : "text-muted-foreground"}`} />
-                        <p className="text-[11px] text-muted-foreground">{item.label}</p>
-                      </div>
-                      <p className={`text-lg font-bold ${item.warn ? "text-warning" : "text-foreground"}`}>{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Confidence */}
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-xs font-medium text-muted-foreground">Confidence</span>
-                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-accent to-primary transition-all duration-700" style={{ width: "91%" }} />
-                  </div>
-                  <span className="text-sm font-bold ai-glow-text">91%</span>
-                </div>
-
-                {/* Inventory Risks */}
-                <div className="rounded-xl bg-warning/5 border border-warning/20 p-3 mb-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-                    <span className="text-xs font-semibold text-foreground">Inventory Risks</span>
-                  </div>
-                  <div className="space-y-1 pl-5.5">
-                    <p className="text-xs text-muted-foreground">• Milk 500ml low stock in Zone 3</p>
-                    <p className="text-xs text-muted-foreground">• Curd 1kg nearing threshold</p>
-                  </div>
-                </div>
-
-                {/* Optimization Insight */}
-                <div className="rounded-xl bg-accent/5 border border-ai-border p-3 mb-5">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Zap className="h-3.5 w-3.5 text-accent" />
-                    <span className="text-xs font-semibold text-accent">Optimization Insight</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground pl-5.5">
-                    Routes optimized for distance and workload balance. Two staff near capacity limit.
-                  </p>
-                </div>
-
-                {/* Why this? Explanation */}
-                {showExplanation && (
-                  <div className="rounded-xl bg-muted/60 border border-border p-4 mb-5 animate-fade-in">
-                    <p className="text-xs font-semibold text-foreground mb-2">Why this plan?</p>
-                    <ul className="space-y-1.5 text-xs text-muted-foreground">
-                      <li>• Historical demand patterns show 17 Feb as a high-demand day (+12% vs average)</li>
-                      <li>• Staff allocation weighted by zone density and delivery SLA windows</li>
-                      <li>• Route optimization reduced total distance by 18% vs manual planning</li>
-                      <li>• 4 SLA risks flagged due to high-density zones with limited staff coverage</li>
-                    </ul>
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-6">
+          {messages.map((msg) => {
+            const draft = msg.draftId ? drafts.find(d => d.id === msg.draftId) : null;
+            return (
+              <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in`}>
+                {msg.role === 'ai' && (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 mt-1">
+                    <Bot className="h-4 w-4 text-purple-600" />
                   </div>
                 )}
-
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setPlanApproved(true)}
-                    disabled={planApproved}
-                    className={`flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-                      planApproved
-                        ? "bg-success/15 text-success cursor-default"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
-                    }`}
-                  >
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    {planApproved ? "Approved" : "Approve Plan"}
-                  </button>
-                  {!planApproved && (
-                    <button className="flex items-center gap-1.5 rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted hover:-translate-y-0.5 hover:shadow-sm">
-                      <Edit3 className="h-3.5 w-3.5" /> Edit Plan
-                    </button>
+                <div className={`space-y-3 ${msg.role === 'user' ? 'max-w-xs md:max-w-md' : 'max-w-full md:max-w-2xl flex-1'}`}>
+                  {msg.role === 'user' ? (
+                    <div className="rounded-2xl rounded-br-md bg-purple-600 px-5 py-3 text-sm text-white shadow-sm">
+                      {msg.content}
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-600 leading-relaxed">{msg.content}</p>
+                      {draft && <DraftCard draft={draft} />}
+                    </>
                   )}
-                  {!planApproved && (
-                    <button className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium text-destructive/70 transition-colors hover:text-destructive hover:bg-destructive/5">
-                      <XCircle className="h-3.5 w-3.5" /> Reject
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setShowExplanation(!showExplanation)}
-                    className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium text-accent transition-all duration-200 hover:bg-accent/5"
-                  >
-                    <HelpCircle className="h-3.5 w-3.5" />
-                    Why this?
-                    {showExplanation ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                  </button>
                 </div>
               </div>
+            );
+          })}
+
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex gap-3 animate-fade-in">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100">
+                <Bot className="h-4 w-4 text-purple-600" />
+              </div>
+              <div className="flex items-center gap-1.5 rounded-2xl bg-gray-100 px-4 py-3">
+                {[0, 1, 2].map(i => (
+                  <span
+                    key={i}
+                    className="h-2 w-2 rounded-full bg-purple-400 animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Action Chips + Input */}
-        <div className="border-t border-border px-6 pb-5 pt-4 space-y-3">
+        {/* Input Area */}
+        <div className="border-t border-purple-100 px-4 md:px-6 pb-4 md:pb-5 pt-4 space-y-3 shrink-0">
           {/* Quick Chips */}
-          <div className="flex gap-2 overflow-x-auto">
-            {["Plan Dispatch", "Show Risks", "Update Inventory", "Generate Invoices"].map((chip) => (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {["Plan Dispatch", "Show Risks", "Update Inventory", "Generate Invoices", "Rebalance Routes"].map((chip) => (
               <button
                 key={chip}
-                className="shrink-0 rounded-full border border-border bg-muted/50 px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/10 hover:text-accent hover:border-ai-border"
+                onClick={() => { setInput(chip); }}
+                className="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-medium text-purple-600 transition-all hover:bg-purple-100 hover:border-purple-400"
               >
                 {chip}
               </button>
             ))}
           </div>
           {/* Input */}
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/30 px-5 py-3 transition-all duration-200 focus-within:border-accent/40 focus-within:shadow-[0_0_16px_-4px_hsl(262_60%_65%/0.15)]">
+          <div className="flex items-center gap-3 rounded-2xl border border-purple-200 bg-purple-50/50 px-4 py-3 transition-all focus-within:border-purple-400 focus-within:bg-white focus-within:shadow-[0_0_16px_-4px_rgba(147,51,234,0.15)]">
             <input
               type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Ask me to plan dispatch, adjust stock, or analyze performance…"
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
             />
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5">
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="flex h-9 w-9 items-center justify-center rounded-xl purple-gradient text-white transition-all hover:opacity-90 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            >
               <Send className="h-4 w-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Context Panel - 30% */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm" style={{ flex: "3" }}>
+      {/* ── Context Panel ── */}
+      <div className="rounded-2xl border border-purple-100 bg-white overflow-hidden shadow-sm lg:flex-[3] flex flex-col min-h-[300px] lg:min-h-0">
         {/* Header */}
-        <div className="px-5 pt-5 pb-2">
-          <h3 className="text-sm font-semibold text-foreground">Context Intelligence</h3>
-          <p className="text-[11px] text-muted-foreground">Real-time operational overview</p>
+        <div className="px-5 pt-5 pb-2 shrink-0">
+          <h3 className="text-sm font-semibold text-gray-900">Context Intelligence</h3>
+          <p className="text-[11px] text-gray-500">Real-time operational overview</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border mx-4">
+        <div className="flex border-b border-purple-100 mx-4 shrink-0">
           {(["today", "drafts", "warnings", "recent"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-2 py-2.5 text-[11px] font-medium capitalize transition-all duration-200 ${
-                activeTab === tab
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`flex-1 px-1 py-2.5 text-[11px] font-medium capitalize transition-all relative ${activeTab === tab
+                  ? "text-purple-600"
+                  : "text-gray-400 hover:text-gray-600"
+                }`}
             >
               {tab === "recent" ? "Activity" : tab}
+              {tab === "drafts" && pendingDrafts.length > 0 && (
+                <span className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[9px] font-bold text-white">
+                  {pendingDrafts.length}
+                </span>
+              )}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
+              )}
             </button>
           ))}
         </div>
 
-        <div className="p-4 space-y-3 overflow-y-auto" style={{ maxHeight: "calc(100% - 120px)" }}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {activeTab === "today" && (
             <div className="space-y-3 animate-fade-in">
-              <ContextCard icon={Sparkles} label="Active Dispatch" value="1" color="text-accent" />
-              <ContextCard icon={FileText} label="Pending Drafts" value="2" color="text-warning" />
-              <ContextCard icon={Activity} label="Deliveries" value="312 / 428" color="text-success" subtitle="72.9% complete" />
-              <ContextCard icon={IndianRupee} label="Revenue Today" value="₹2,84,000" color="text-primary" />
+              <ContextCard icon={Sparkles} label="Active Dispatch" value="1" color="text-purple-600" bg="bg-purple-50" />
+              <ContextCard icon={FileText} label="Pending Drafts" value={String(pendingDrafts.length)} color="text-yellow-600" bg="bg-yellow-50" />
+              <ContextCard icon={Activity} label="Deliveries" value="312 / 428" color="text-green-600" bg="bg-green-50" subtitle="72.9% complete" />
+              <ContextCard icon={IndianRupee} label="Revenue Today" value="₹2,84,000" color="text-purple-700" bg="bg-purple-50" />
+              <ContextCard icon={Users} label="Staff Active" value="13 / 15" color="text-blue-600" bg="bg-blue-50" />
+              <ContextCard icon={MapPin} label="Shops Covered" value="100" color="text-green-600" bg="bg-green-50" />
             </div>
           )}
 
           {activeTab === "drafts" && (
             <div className="space-y-3 animate-fade-in">
-              <DraftCard
-                title="Inventory Adjustment"
-                detail="3 SKUs modified"
-                status="Awaiting approval"
-                icon={Package}
-              />
-              <DraftCard
-                title="Invoice Batch"
-                detail="62 invoices generated"
-                status="Ready for review"
-                icon={FileText}
-              />
+              {drafts.slice(0, 5).map(draft => (
+                <div key={draft.id} className="rounded-xl border border-purple-100 p-3 hover:border-purple-200 transition-colors">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xs font-semibold text-gray-800 flex-1 truncate">{draft.title}</p>
+                    <StatusBadge status={draft.status} />
+                  </div>
+                  <p className="text-[11px] text-gray-500 truncate">{draft.description}</p>
+                  <p className="text-[10px] text-purple-500 mt-1">{draft.confidence}% confidence</p>
+                </div>
+              ))}
             </div>
           )}
 
           {activeTab === "warnings" && (
             <div className="space-y-3 animate-fade-in">
-              <WarningCard
-                icon={AlertTriangle}
-                title="4 Shops at SLA Risk"
-                description="Delivery window may be missed"
-                severity="warning"
-              />
-              <WarningCard
-                icon={Package}
-                title="2 Low Stock SKUs"
-                description="Below threshold in multiple zones"
-                severity="warning"
-              />
-              <WarningCard
-                icon={Users}
-                title="1 Staff Over Capacity"
-                description="Karthik V. exceeding stop limit"
-                severity="destructive"
-              />
+              <WarningCard icon={AlertTriangle} title="4 Shops at SLA Risk" description="Delivery window may be missed" severity="warning" />
+              <WarningCard icon={Package} title="2 Low Stock SKUs" description="Milk 500ml & Bread below threshold" severity="warning" />
+              <WarningCard icon={Users} title="1 Staff Over Capacity" description="Karthik V. exceeding stop limit" severity="destructive" />
+              <WarningCard icon={TrendingUp} title="Credit Risk" description="3 shops near credit limit" severity="warning" />
             </div>
           )}
 
@@ -274,17 +204,19 @@ const CommandCenter = () => {
                 { action: "Approved by Admin", time: "08:05", icon: CheckCircle },
                 { action: "Shop reassigned", time: "09:15", icon: MapPin },
                 { action: "Inventory adjusted", time: "10:22", icon: Package },
-              ].map((a, i) => (
+                { action: "Invoice generated", time: "14:00", icon: FileText },
+                { action: "SLA warning raised", time: "11:45", icon: AlertTriangle },
+              ].map((a, i, arr) => (
                 <div key={a.time} className="flex items-start gap-3 py-2.5 group">
                   <div className="flex flex-col items-center">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-500 group-hover:bg-purple-100 transition-colors">
                       <a.icon className="h-3.5 w-3.5" />
                     </div>
-                    {i < 3 && <div className="w-px h-full bg-border mt-1 min-h-[12px]" />}
+                    {i < arr.length - 1 && <div className="w-px h-full bg-purple-100 mt-1 min-h-[12px]" />}
                   </div>
                   <div className="pt-0.5">
-                    <p className="text-xs font-medium text-foreground">{a.action}</p>
-                    <p className="text-[10px] text-muted-foreground">{a.time}</p>
+                    <p className="text-xs font-medium text-gray-800">{a.action}</p>
+                    <p className="text-[10px] text-gray-400">{a.time}</p>
                   </div>
                 </div>
               ))}
@@ -296,65 +228,31 @@ const CommandCenter = () => {
   );
 };
 
-const ContextCard = ({ icon: Icon, label, value, color, subtitle }: { icon: any; label: string; value: string; color: string; subtitle?: string }) => (
-  <div className="flex items-center gap-3 rounded-xl border border-border p-3.5 transition-all duration-200 hover:shadow-sm hover:border-border/80 cursor-default">
-    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-muted ${color}`}>
+const ContextCard = ({ icon: Icon, label, value, color, bg, subtitle }: {
+  icon: any; label: string; value: string; color: string; bg: string; subtitle?: string;
+}) => (
+  <div className="flex items-center gap-3 rounded-xl border border-gray-100 p-3.5 transition-all hover:shadow-sm hover:border-purple-100 cursor-default">
+    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg} ${color} shrink-0`}>
       <Icon className="h-4.5 w-4.5" />
     </div>
-    <div className="flex-1">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className="text-sm font-bold text-foreground">{value}</p>
-      {subtitle && <p className="text-[10px] text-muted-foreground">{subtitle}</p>}
+    <div className="flex-1 min-w-0">
+      <p className="text-[11px] text-gray-500">{label}</p>
+      <p className="text-sm font-bold text-gray-900">{value}</p>
+      {subtitle && <p className="text-[10px] text-gray-400">{subtitle}</p>}
     </div>
   </div>
 );
 
-const DraftCard = ({ title, detail, status, icon: Icon }: { title: string; detail: string; status: string; icon: any }) => {
-  const [approved, setApproved] = useState(false);
-
-  return (
-    <div className="rounded-xl border border-border p-4 transition-all duration-200 hover:shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/10 text-accent">
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">{title}</p>
-          <p className="text-[11px] text-muted-foreground">{detail}</p>
-          <div className="flex items-center gap-2 mt-2">
-            {approved ? (
-              <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
-                <CheckCircle className="h-3 w-3" /> Approved
-              </span>
-            ) : (
-              <>
-                <span className="text-[10px] text-muted-foreground">{status}</span>
-                <button
-                  onClick={() => setApproved(true)}
-                  className="ml-auto rounded-lg bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-sm"
-                >
-                  Approve
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const WarningCard = ({ icon: Icon, title, description, severity }: { icon: any; title: string; description: string; severity: "warning" | "destructive" }) => (
-  <div className={`rounded-xl border p-3.5 transition-all duration-200 hover:shadow-sm ${
-    severity === "destructive"
-      ? "border-destructive/20 bg-destructive/5"
-      : "border-warning/20 bg-warning/5"
-  }`}>
+const WarningCard = ({ icon: Icon, title, description, severity }: {
+  icon: any; title: string; description: string; severity: "warning" | "destructive";
+}) => (
+  <div className={`rounded-xl border p-3.5 transition-all hover:shadow-sm ${severity === "destructive" ? "border-red-200 bg-red-50" : "border-yellow-200 bg-yellow-50"
+    }`}>
     <div className="flex items-center gap-2 mb-1">
-      <Icon className={`h-3.5 w-3.5 ${severity === "destructive" ? "text-destructive" : "text-warning"}`} />
-      <span className="text-xs font-semibold text-foreground">{title}</span>
+      <Icon className={`h-3.5 w-3.5 shrink-0 ${severity === "destructive" ? "text-red-500" : "text-yellow-600"}`} />
+      <span className="text-xs font-semibold text-gray-800">{title}</span>
     </div>
-    <p className="text-[11px] text-muted-foreground pl-5.5">{description}</p>
+    <p className="text-[11px] text-gray-500 pl-5.5">{description}</p>
   </div>
 );
 

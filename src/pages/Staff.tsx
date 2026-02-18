@@ -1,100 +1,216 @@
-import { useState } from "react";
-import { ArrowLeft, User, MapPin, TrendingUp } from "lucide-react";
-import { staffList } from "@/data/mockData";
+import { useState, useMemo } from "react";
+import { Users, Search, Phone, Truck, MapPin, TrendingUp, AlertTriangle } from "lucide-react";
+import { useStaffStore, useDispatchStore, useShopStore } from "@/store";
+import StatusBadge from "@/components/shared/StatusBadge";
+import EmptyState from "@/components/shared/EmptyState";
 
 const Staff = () => {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const staff = staffList.find((s) => s.id === selectedId);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "On Leave" | "Inactive">("all");
+  const [selectedStaff, setSelectedStaff] = useState<string | null>(null);
 
-  if (selectedId && staff) {
-    return (
-      <div className="space-y-5 animate-fade-in">
-        <button onClick={() => setSelectedId(null)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back to Staff
-        </button>
+  const { staff } = useStaffStore();
+  const { plan } = useDispatchStore();
+  const { shops } = useShopStore();
 
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-            <User className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">{staff.name}</h2>
-            <p className="text-sm text-muted-foreground">Performance: {staff.performance}%</p>
-          </div>
-        </div>
+  const filtered = useMemo(() => {
+    return staff.filter(s => {
+      const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.zone.toLowerCase().includes(search.toLowerCase()) ||
+        s.vehicle.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === "all" || s.status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [staff, search, statusFilter]);
 
-        <div className="grid grid-cols-3 gap-4 max-w-lg">
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Capacity</p>
-            <p className="text-lg font-semibold text-foreground">{staff.capacity}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Stops Today</p>
-            <p className="text-lg font-semibold text-foreground">{staff.stops}</p>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Distance</p>
-            <p className="text-lg font-semibold text-foreground">{staff.distance}</p>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3">Today's Route Summary</h3>
-          <div className="space-y-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-foreground">Stop {i + 1} – Zone {(i % 4) + 1}</span>
-                <span className="ml-auto text-success font-medium">Delivered</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const selectedStaffData = selectedStaff ? staff.find(s => s.id === selectedStaff) : null;
+  const selectedAssignment = selectedStaff ? plan.assignments.find(a => a.staffId === selectedStaff) : null;
+  const assignedShops = selectedAssignment
+    ? shops.filter(sh => selectedAssignment.shopIds.includes(sh.id))
+    : [];
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden animate-fade-in">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/50">
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Capacity</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Stops Today</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Performance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {staffList.map((s) => (
-              <tr
-                key={s.id}
-                onClick={() => setSelectedId(s.id)}
-                className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
-              >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                      <User className="h-3.5 w-3.5 text-primary" />
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Staff</h1>
+          <p className="text-sm text-gray-500">{staff.length} staff · {staff.filter(s => s.status === 'Active').length} active</p>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total Staff", value: staff.length, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Active", value: staff.filter(s => s.status === 'Active').length, icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
+          { label: "On Leave", value: staff.filter(s => s.status === 'On Leave').length, icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50" },
+          { label: "At Risk", value: staff.filter(s => s.risk).length, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+        ].map(item => (
+          <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
+              <item.icon className="h-4 w-4" />
+            </div>
+            <p className="text-xs text-gray-500">{item.label}</p>
+            <p className="text-xl font-bold text-gray-900">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px]">
+          <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search staff, zone, vehicle…"
+            className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+          />
+        </div>
+        <div className="flex rounded-xl border border-gray-200 bg-white overflow-hidden">
+          {(['all', 'Active', 'On Leave', 'Inactive'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              className={`px-3 py-2 text-xs font-medium transition-colors ${statusFilter === f ? 'bg-purple-600 text-white' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+            >
+              {f === 'all' ? 'All' : f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Staff List */}
+        <div className="lg:col-span-2 space-y-3">
+          {filtered.length === 0 ? (
+            <EmptyState icon={Users} title="No staff found" />
+          ) : (
+            filtered.map((s) => {
+              const assignment = plan.assignments.find(a => a.staffId === s.id);
+              const shopCount = assignment?.shopIds.length || 0;
+              const utilization = Math.round((shopCount / s.capacity) * 100);
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setSelectedStaff(s.id === selectedStaff ? null : s.id)}
+                  className={`rounded-xl border p-4 cursor-pointer transition-all hover:shadow-sm ${selectedStaff === s.id
+                      ? 'border-purple-400 bg-purple-50'
+                      : 'border-gray-100 bg-white hover:border-purple-200'
+                    }`}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white text-lg font-bold shrink-0 ${s.status !== 'Active' ? 'bg-gray-300' : 'purple-gradient'
+                      }`}>
+                      {s.name[0]}
                     </div>
-                    <span className="font-medium text-foreground">{s.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{s.capacity}</td>
-                <td className="px-4 py-3 text-right text-foreground">{s.stops}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${s.performance}%` }} />
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-gray-900">{s.name}</p>
+                        <StatusBadge status={s.status} />
+                        {s.risk && <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-700">⚠ Risk</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
+                        <span className="flex items-center gap-1"><Truck className="h-3 w-3" />{s.vehicle}</span>
+                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{s.zone}</span>
+                        <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{s.phone}</span>
+                      </div>
                     </div>
-                    <span className="text-foreground font-medium">{s.performance}%</span>
+
+                    {/* Stats */}
+                    <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+                      <p className="text-sm font-bold text-gray-900">{shopCount} shops</p>
+                      <p className="text-xs text-gray-400">{s.distance}</p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${utilization > 90 ? 'bg-red-500' : utilization > 70 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                            style={{ width: `${Math.min(100, utilization)}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-gray-400">{utilization}%</span>
+                      </div>
+                    </div>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+                  {/* Performance bar */}
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 w-20">Performance</span>
+                    <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full purple-gradient"
+                        style={{ width: `${s.performance}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-semibold text-purple-600">{s.performance}%</span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Detail Panel */}
+        {selectedStaffData ? (
+          <div className="rounded-xl border border-purple-200 bg-white p-5 space-y-4 h-fit sticky top-20">
+            <div className="flex items-center gap-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full purple-gradient text-white text-xl font-bold">
+                {selectedStaffData.name[0]}
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">{selectedStaffData.name}</h3>
+                <StatusBadge status={selectedStaffData.status} size="md" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {[
+                { label: "Zone", value: selectedStaffData.zone },
+                { label: "Vehicle", value: selectedStaffData.vehicle },
+                { label: "Phone", value: selectedStaffData.phone },
+                { label: "Capacity", value: `${selectedStaffData.capacity} stops` },
+                { label: "Distance", value: selectedStaffData.distance },
+                { label: "Performance", value: `${selectedStaffData.performance}%` },
+              ].map(item => (
+                <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                  <span className="text-xs text-gray-500">{item.label}</span>
+                  <span className="text-xs font-semibold text-gray-800">{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Assigned Shops ({assignedShops.length})
+              </h4>
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                {assignedShops.slice(0, 10).map(shop => (
+                  <div key={shop.id} className="flex items-center gap-2 rounded-lg bg-purple-50 px-3 py-2">
+                    <MapPin className="h-3 w-3 text-purple-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-800 truncate">{shop.name}</p>
+                      <p className="text-[10px] text-gray-400">{shop.area}</p>
+                    </div>
+                  </div>
+                ))}
+                {assignedShops.length > 10 && (
+                  <p className="text-xs text-gray-400 text-center">+{assignedShops.length - 10} more</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 flex flex-col items-center justify-center text-center h-fit">
+            <Users className="h-10 w-10 text-gray-200 mb-3" />
+            <p className="text-sm text-gray-400">Select a staff member to view details</p>
+          </div>
+        )}
       </div>
     </div>
   );
