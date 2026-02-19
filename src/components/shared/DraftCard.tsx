@@ -14,6 +14,9 @@ interface Props {
 
 const DraftCard = ({ draft, compact = false }: Props) => {
     const [showPlanModal, setShowPlanModal] = useState(false);
+    const [showConfirmApprove, setShowConfirmApprove] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showExplanation, setShowExplanation] = useState(false);
     const { updateDraftStatus } = useDraftStore();
 
     const handleApprove = () => {
