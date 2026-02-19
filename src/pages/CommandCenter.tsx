@@ -1,32 +1,33 @@
-import { useState, useRef, useEffect } from "react";
-import {
-  Sparkles, Send, CheckCircle, AlertTriangle, Clock,
-  FileText, Activity, Zap, Package, TrendingUp, IndianRupee,
-  Users, MapPin, Bot
-} from "lucide-react";
 import { useChatStore, useDraftStore, useUserStore } from "@/store";
-import DraftCard from "@/components/shared/DraftCard";
-import StatusBadge from "@/components/shared/StatusBadge";
+import { useSearchParams } from "react-router-dom";
+import ChatThread from "@/components/command-center/ChatThread";
+import ChatInput from "@/components/command-center/ChatInput";
+import ContextPanel from "@/components/command-center/ContextPanel";
+import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
+
+// Global UI event logging helper
+const ui_event = (name: string, payload: any) => {
+  console.log(`[UI_EVENT] ${name}`, payload);
+};
 
 const CommandCenter = () => {
-  const [activeTab, setActiveTab] = useState<"today" | "drafts" | "warnings" | "recent">("today");
-  const [input, setInput] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = (searchParams.get("tab") as "today" | "drafts" | "dispatch" | "warnings" | "recent") || "today";
+
   const { messages, isTyping, sendMessage } = useChatStore();
-  const { drafts } = useDraftStore();
+  const { drafts, updateDraftStatus } = useDraftStore();
   const { currentUser } = useUserStore();
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-    sendMessage(input, currentUser);
-    setInput("");
+  const handleSendMessage = (text: string, attachments?: File[]) => {
+    ui_event("SEND_MESSAGE", { user_id: currentUser.id, role: currentUser.role, text });
+    sendMessage(text, currentUser);
   };
 
-  const pendingDrafts = drafts.filter(d => d.status === 'DRAFT');
+  const setTab = (tab: string) => {
+    ui_event("NAV_CHANGE", { route: "/command-center", tab });
+    setSearchParams({ tab });
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8.5rem)] lg:h-[calc(100vh-7rem)]">
@@ -47,213 +48,26 @@ const CommandCenter = () => {
           </span>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-5">
-          {messages.map((msg) => {
-            const draft = msg.draftId ? drafts.find(d => d.id === msg.draftId) : null;
-            return (
-              <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in`}>
-                {msg.role === 'ai' && (
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-100 mt-0.5">
-                    <Bot className="h-3.5 w-3.5 text-purple-600" />
-                  </div>
-                )}
-                <div className={`space-y-2 ${msg.role === 'user' ? 'max-w-sm md:max-w-lg' : 'max-w-full md:max-w-5xl flex-1'}`}>
-                  {msg.role === 'user' ? (
-                    <div className="rounded-2xl rounded-br-md bg-purple-600 px-4 py-2.5 text-xs text-white shadow-sm">
-                      {msg.content}
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-xs text-gray-600 leading-relaxed bg-gray-50/50 p-2 rounded-lg -ml-2">{msg.content}</p>
-                      {draft && <DraftCard draft={draft} />}
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        <ChatThread
+          messages={messages}
+          drafts={drafts}
+          isTyping={isTyping}
+        />
 
-          {/* Typing indicator */}
-          {isTyping && (
-            <div className="flex gap-3 animate-fade-in">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-100">
-                <Bot className="h-3.5 w-3.5 text-purple-600" />
-              </div>
-              <div className="flex items-center gap-1 rounded-2xl bg-gray-100 px-3 py-2">
-                {[0, 1, 2].map(i => (
-                  <span
-                    key={i}
-                    className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="border-t border-purple-100 px-4 md:px-6 pb-4 md:pb-5 pt-3 space-y-3 shrink-0">
-          {/* Quick Chips */}
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {["Plan Dispatch", "Show Risks", "Update Inventory", "Generate Invoices", "Rebalance Routes"].map((chip) => (
-              <button
-                key={chip}
-                onClick={() => { setInput(chip); }}
-                className="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[10px] font-medium text-purple-600 transition-all hover:bg-purple-100 hover:border-purple-400"
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-          {/* Input */}
-          <div className="flex items-center gap-3 rounded-2xl border border-purple-200 bg-purple-50/50 px-4 py-2.5 transition-all focus-within:border-purple-400 focus-within:bg-white focus-within:shadow-[0_0_16px_-4px_rgba(147,51,234,0.15)]">
-            <input
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder="Ask me to plan dispatch, adjust stock, or analyze performance…"
-              className="flex-1 bg-transparent text-xs text-gray-700 placeholder:text-gray-400 outline-none"
-            />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim()}
-              className="flex h-8 w-8 items-center justify-center rounded-xl purple-gradient text-white transition-all hover:opacity-90 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-            >
-              <Send className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
+        <ChatInput
+          onSend={handleSendMessage}
+          disabled={isTyping}
+        />
       </div>
 
       {/* ── Context Panel ── */}
-      <div className="flex bg-white rounded-2xl border border-purple-100 overflow-hidden shadow-sm w-full lg:w-72 xl:w-80 shrink-0 flex-col h-64 lg:h-auto lg:min-h-0">
-        {/* Header */}
-        <div className="px-5 pt-5 pb-2 shrink-0">
-          <h3 className="text-sm font-semibold text-gray-900">Context Intelligence</h3>
-          <p className="text-[11px] text-gray-500">Real-time operational overview</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-purple-100 mx-4 shrink-0">
-          {(["today", "drafts", "warnings", "recent"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-1 py-2.5 text-[11px] font-medium capitalize transition-all relative ${activeTab === tab
-                ? "text-purple-600"
-                : "text-gray-400 hover:text-gray-600"
-                }`}
-            >
-              {tab === "recent" ? "Activity" : tab}
-              {tab === "drafts" && pendingDrafts.length > 0 && (
-                <span className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[9px] font-bold text-white">
-                  {pendingDrafts.length}
-                </span>
-              )}
-              {activeTab === tab && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {activeTab === "today" && (
-            <div className="space-y-3 animate-fade-in">
-              <ContextCard icon={Sparkles} label="Active Dispatch" value="1" color="text-purple-600" bg="bg-purple-0" />
-              <ContextCard icon={FileText} label="Pending Drafts" value={String(pendingDrafts.length)} color="text-purple-600" bg="bg-yellow-0" />
-              <ContextCard icon={Activity} label="Deliveries" value="312 / 428" color="text-green-600" bg="bg-green-0" subtitle="72.9% complete" />
-              <ContextCard icon={IndianRupee} label="Revenue Today" value="₹2,84,000" color="text-purple-700" bg="bg-purple-0" />
-              <ContextCard icon={Users} label="Staff Active" value="13 / 15" color="text-blue-600" bg="bg-blue-0" />
-              <ContextCard icon={MapPin} label="Shops Covered" value="100" color="text-green-600" bg="bg-green-0" />
-            </div>
-          )}
-
-          {activeTab === "drafts" && (
-            <div className="space-y-3 animate-fade-in">
-              {drafts.slice(0, 5).map(draft => (
-                <div key={draft.id} className="rounded-xl border border-purple-100 p-3 hover:border-purple-200 transition-colors">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-xs font-semibold text-gray-800 flex-1 truncate">{draft.title}</p>
-                    <StatusBadge status={draft.status} />
-                  </div>
-                  <p className="text-[11px] text-gray-500 truncate">{draft.description}</p>
-                  <p className="text-[10px] text-purple-500 mt-1">{draft.confidence}% confidence</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "warnings" && (
-            <div className="space-y-3 animate-fade-in">
-              <WarningCard icon={AlertTriangle} title="4 Shops at SLA Risk" description="Delivery window may be missed" severity="warning" />
-              <WarningCard icon={Package} title="2 Low Stock SKUs" description="Milk 500ml & Bread below threshold" severity="warning" />
-              <WarningCard icon={Users} title="1 Staff Over Capacity" description="Karthik V. exceeding stop limit" severity="destructive" />
-              <WarningCard icon={TrendingUp} title="Credit Risk" description="3 shops near credit limit" severity="warning" />
-            </div>
-          )}
-
-          {activeTab === "recent" && (
-            <div className="space-y-0.5 animate-fade-in">
-              {[
-                { action: "Draft Created", time: "08:02", icon: FileText },
-                { action: "Approved by Admin", time: "08:05", icon: CheckCircle },
-                { action: "Shop reassigned", time: "09:15", icon: MapPin },
-                { action: "Inventory adjusted", time: "10:22", icon: Package },
-                { action: "Invoice generated", time: "14:00", icon: FileText },
-                { action: "SLA warning raised", time: "11:45", icon: AlertTriangle },
-              ].map((a, i, arr) => (
-                <div key={a.time} className="flex items-start gap-3 py-2.5 group">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-500 group-hover:bg-purple-100 transition-colors">
-                      <a.icon className="h-3.5 w-3.5" />
-                    </div>
-                    {i < arr.length - 1 && <div className="w-px h-full bg-purple-100 mt-1 min-h-[12px]" />}
-                  </div>
-                  <div className="pt-0.5">
-                    <p className="text-xs font-medium text-gray-800">{a.action}</p>
-                    <p className="text-[10px] text-gray-400">{a.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <ContextPanel
+        activeTab={activeTab}
+        onTabChange={setTab}
+        drafts={drafts}
+      />
     </div>
   );
 };
-
-const ContextCard = ({ icon: Icon, label, value, color, bg, subtitle }: {
-  icon: any; label: string; value: string; color: string; bg: string; subtitle?: string;
-}) => (
-  <div className="flex items-center gap-3 rounded-xl border border-gray-100 p-3.5 transition-all hover:shadow-sm hover:border-purple-100 cursor-default">
-    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg} ${color} shrink-0`}>
-      <Icon className="h-4.5 w-4.5" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[11px] text-gray-500">{label}</p>
-      <p className="text-sm font-bold text-gray-900">{value}</p>
-      {subtitle && <p className="text-[10px] text-gray-400">{subtitle}</p>}
-    </div>
-  </div>
-);
-
-const WarningCard = ({ icon: Icon, title, description, severity }: {
-  icon: any; title: string; description: string; severity: "warning" | "destructive";
-}) => (
-  <div className={`rounded-xl border p-3.5 transition-all hover:shadow-sm ${severity === "destructive" ? "border-red-200 bg-red-50" : "border-yellow-200 bg-yellow-50"
-    }`}>
-    <div className="flex items-center gap-2 mb-1">
-      <Icon className={`h-3.5 w-3.5 shrink-0 ${severity === "destructive" ? "text-red-500" : "text-yellow-600"}`} />
-      <span className="text-xs font-semibold text-gray-800">{title}</span>
-    </div>
-    <p className="text-[11px] text-gray-500 pl-5.5">{description}</p>
-  </div>
-);
 
 export default CommandCenter;

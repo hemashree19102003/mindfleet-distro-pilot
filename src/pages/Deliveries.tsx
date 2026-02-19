@@ -1,54 +1,104 @@
-import { MapPin, CheckCircle, Package, Navigation } from "lucide-react";
-import { useStaffStore, useDispatchStore, useShopStore, useUserStore } from "@/store";
-import RoleGuard from "@/components/shared/RoleGuard";
+import { useState, useMemo } from "react";
+import {
+  MapPin, CheckCircle, Package, Navigation, Search, Filter,
+  AlertTriangle, Clock, User, Layers, RefreshCw
+} from "lucide-react";
+import { useStaffStore, useDispatchStore, useShopStore, useUserStore, useDraftStore } from "@/store";
+import StatusBadge from "@/components/shared/StatusBadge";
 import { toast } from "sonner";
+import { createDraftFromAI } from "@/data/generators";
+import DeliveryTable, { DeliveryRow } from "@/components/deliveries/DeliveryTable";
+import ExceptionsPanel from "@/components/deliveries/ExceptionsPanel";
+
 
 const Deliveries = () => {
-  const { currentUser } = useUserStore();
+  const [filters, setFilters] = useState({ search: "", status: "All", staffId: "All" });
+
   const { staff } = useStaffStore();
   const { plan } = useDispatchStore();
   const { shops } = useShopStore();
+  const { currentUser } = useUserStore();
+  const { addDraft } = useDraftStore();
 
-  // For STAFF role, find their own assignment
-  const myStaff = staff.find(s => s.name === currentUser.name) || staff[0];
-  const myAssignment = plan.assignments.find(a => a.staffId === myStaff.id);
-  const myShops = myAssignment ? shops.filter(sh => myAssignment.shopIds.includes(sh.id)) : shops.slice(0, 8);
+  // Combine data for monitoring
+  const allStops = useMemo<DeliveryRow[]>(() => {
+    return plan.assignments.flatMap(a => {
+      const staffMember = staff.find(s => s.id === a.staffId);
+      return a.shopIds.map(shopId => {
+        const shop = shops.find(sh => sh.id === shopId);
+        // Mocking random status for demo purposes
+        const rand = Math.random();
+        let status: DeliveryRow['status'] = 'PENDING';
+        if (rand > 0.8) status = 'DELIVERED';
+        else if (rand > 0.7) status = 'FAILED';
+        else if (rand > 0.6) status = 'SKIPPED';
+
+        return {
+          id: `${a.staffId}-${shopId}`,
+          shopId,
+          shopName: shop?.name || "Unknown",
+          area: shop?.area || "Unknown",
+          zone: shop?.zone || "North Zone", // Mock zone
+          staffId: a.staffId,
+          staffName: staffMember?.name || "Unassigned",
+          status,
+          eta: "14:20",
+          slaRisk: Math.random() > 0.9,
+        };
+      });
+    });
+  }, [plan, staff, shops]);
+
+  const filtered = useMemo(() => allStops.filter(s => {
+    const matchSearch = s.shopName.toLowerCase().includes(filters.search.toLowerCase()) ||
+      s.staffName.toLowerCase().includes(filters.search.toLowerCase()) ||
+      s.area.toLowerCase().includes(filters.search.toLowerCase());
+    const matchStatus = filters.status === "All" || s.status === filters.status;
+    const matchStaff = filters.staffId === "All" || s.staffId === filters.staffId;
+    return matchSearch && matchStatus && matchStaff;
+  }), [allStops, filters]);
+
+  const failedStops = useMemo(() => allStops.filter(s => s.status === 'FAILED'), [allStops]);
+  const delayedStops = useMemo(() => allStops.filter(s => s.slaRisk && s.status !== 'DELIVERED' && s.status !== 'FAILED'), [allStops]);
+
+  const handleReassignExceptions = () => {
+    const draft = createDraftFromAI('REBALANCE', currentUser.name);
+    draft.description = `Reassign ${failedStops.length} failed/skipped deliveries to nearest available staff`;
+    addDraft(draft);
+    toast.success("Reassignment draft created for exceptions");
+  };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900">My Route</h1>
-        <p className="text-sm text-gray-500">{myShops.length} stops today</p>
+    <div className="space-y-6 pb-20 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Operations Monitoring</h1>
+          <p className="text-sm text-gray-500 font-medium">Real-time status of {allStops.length} scheduled stops</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              toast.success("Refreshing real-time status...");
+            }}
+            className="h-10 px-4 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition-all active:scale-95 flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> REFRESH
+          </button>
+        </div>
       </div>
 
-      {/* Route stops */}
-      <div className="space-y-3">
-        {myShops.slice(0, 15).map((shop, i) => (
-          <div key={shop.id} className="flex flex-wrap md:flex-nowrap items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:border-purple-200 transition-all">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full purple-gradient text-white text-sm font-bold shrink-0">
-              {i + 1}
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <p className="font-semibold text-gray-900">{shop.name}</p>
-              <p className="text-xs text-gray-500">{shop.area} · {shop.cadence}</p>
-            </div>
-            <div className="flex gap-2 w-full md:w-auto justify-end mt-2 md:mt-0">
-              <button
-                onClick={() => toast.success(`Navigating to ${shop.name}`)}
-                className="flex flex-1 md:flex-none items-center justify-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors"
-              >
-                <Navigation className="h-3 w-3" /> Navigate
-              </button>
-              <button
-                onClick={() => toast.success(`${shop.name} marked as delivered`)}
-                className="flex flex-1 md:flex-none items-center justify-center gap-1 rounded-lg purple-gradient px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-all"
-              >
-                <CheckCircle className="h-3 w-3" /> Delivered
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <ExceptionsPanel
+        failedStops={failedStops}
+        delayedStops={delayedStops}
+        onCreateReassignment={handleReassignExceptions}
+      />
+
+      <DeliveryTable
+        rows={filtered}
+        filters={filters}
+        onChangeFilters={setFilters}
+        onOpenStop={(id) => toast.info(`Viewing details for stop ${id}`)}
+      />
     </div>
   );
 };

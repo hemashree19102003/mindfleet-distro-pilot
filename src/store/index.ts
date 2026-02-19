@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import type {
     DraftCard, DraftStatus, User, Staff, Shop, InventorySKU,
-    Invoice, InvoiceStatus, DispatchPlan, ChatMessage
+    Invoice, InvoiceStatus, DispatchPlan, ChatMessage,
+    LLMProvider, SystemSettings
 } from './types';
 import {
     USERS, STAFF_LIST, SHOPS_LIST, INVENTORY_SKUS, INVOICES_LIST,
@@ -13,17 +14,17 @@ import {
 interface DraftStore {
     drafts: DraftCard[];
     addDraft: (draft: DraftCard) => void;
-    updateDraftStatus: (id: string, status: DraftStatus, reasonTag?: string) => void;
+    updateDraftStatus: (id: string, status: DraftStatus, performedBy: string, reason?: string) => void;
     getDraft: (id: string) => DraftCard | undefined;
 }
 
 export const useDraftStore = create<DraftStore>((set, get) => ({
     drafts: INITIAL_DRAFTS,
     addDraft: (draft) => set(s => ({ drafts: [draft, ...s.drafts] })),
-    updateDraftStatus: (id, status, reasonTag) =>
+    updateDraftStatus: (id, status, performedBy, reason) =>
         set(s => ({
             drafts: s.drafts.map(d =>
-                d.id === id ? { ...d, status, reasonTag, updatedAt: new Date().toISOString() } : d
+                d.id === id ? { ...d, status, reasonTag: reason, updatedAt: new Date().toISOString() } : d
             ),
         })),
     getDraft: (id) => get().drafts.find(d => d.id === id),
@@ -34,12 +35,14 @@ interface UserStore {
     currentUser: User;
     setCurrentUser: (user: User) => void;
     users: User[];
+    logout: () => void;
 }
 
 export const useUserStore = create<UserStore>(() => ({
     currentUser: USERS[0],
     setCurrentUser: (user) => useUserStore.setState({ currentUser: user }),
     users: USERS,
+    logout: () => useUserStore.setState({ currentUser: USERS[0] }), // Demo: just reset to first user
 }));
 
 // ─── Staff Store ──────────────────────────────────────────────────────────────
@@ -236,4 +239,25 @@ export const useChatStore = create<ChatStore>((set) => ({
             set(s => ({ messages: [...s.messages, aiMsg], isTyping: false }));
         }, 1200 + Math.random() * 800);
     },
+}));
+
+// ─── Settings Store ───────────────────────────────────────────────────────────
+interface SettingsStore {
+    settings: SystemSettings;
+    updateSettings: (updates: Partial<SystemSettings>) => void;
+}
+
+export const useSettingsStore = create<SettingsStore>((set) => ({
+    settings: {
+        llmProvider: 'AUTO',
+        autopilotLevel: 0,
+        optimizationWeights: {
+            distance: 35,
+            sla: 25,
+            workload: 30,
+            credit: 10
+        },
+        temperature: 0.2,
+    },
+    updateSettings: (updates) => set(s => ({ settings: { ...s.settings, ...updates } })),
 }));

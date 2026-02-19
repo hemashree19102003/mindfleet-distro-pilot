@@ -2,18 +2,11 @@ import { useState } from 'react';
 import { X, Tag } from 'lucide-react';
 
 const REASON_TAGS = [
-    'Proximity optimization',
-    'Customer request',
-    'Staff capacity',
-    'Route efficiency',
-    'Stock shortage',
-    'Credit limit exceeded',
-    'SLA risk mitigation',
-    'Weather/traffic',
-    'Shop closed',
-    'Data correction',
-    'Manager override',
-    'Other',
+    'CAPACITY',
+    'PRIORITY',
+    'SHOP_REQUEST',
+    'STAFF_ISSUE',
+    'OTHER'
 ];
 
 interface Props {
@@ -58,8 +51,8 @@ const ReasonTagModal = ({ open, title, onSubmit, onCancel }: Props) => {
                                 key={tag}
                                 onClick={() => setSelected(tag)}
                                 className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${selected === tag
-                                        ? 'border-purple-500 bg-purple-600 text-white shadow-sm'
-                                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700'
+                                    ? 'border-purple-500 bg-purple-600 text-white shadow-sm'
+                                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700'
                                     }`}
                             >
                                 {tag}

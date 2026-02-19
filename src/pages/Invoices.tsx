@@ -1,270 +1,348 @@
 import { useState, useMemo } from "react";
-import { FileText, Search, IndianRupee, CreditCard, CheckCircle, Clock, AlertTriangle } from "lucide-react";
-import { useInvoiceStore, useDraftStore, useUserStore } from "@/store";
+import {
+  FileText, Search, Filter, IndianRupee, Download,
+  CreditCard, Clock, CheckCircle, AlertTriangle, Sparkles,
+  Calendar, MoreVertical, ChevronRight
+} from "lucide-react";
+import { useInvoiceStore, useUserStore } from "@/store";
 import StatusBadge from "@/components/shared/StatusBadge";
-import ReasonTagModal from "@/components/shared/ReasonTagModal";
-import ConfirmModal from "@/components/shared/ConfirmModal";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "sonner";
-import { createDraftFromAI } from "@/data/generators";
-import type { InvoiceStatus } from "@/store/types";
 
 const Invoices = () => {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | InvoiceStatus>("all");
-  const [page, setPage] = useState(0);
-  const [paymentModal, setPaymentModal] = useState<{ open: boolean; invoiceId: string; shopName: string; outstanding: number } | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [reasonModal, setReasonModal] = useState(false);
-  const [confirmFinalize, setConfirmFinalize] = useState<string | null>(null);
-  const PAGE_SIZE = 15;
+  const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+  const [paymentModal, setPaymentModal] = useState({ open: false, invoiceId: "" });
 
-  const { invoices, updateInvoiceStatus } = useInvoiceStore();
-  const { addDraft } = useDraftStore();
+  const { invoices } = useInvoiceStore();
   const { currentUser } = useUserStore();
 
   const filtered = useMemo(() => {
-    return invoices.filter(inv => {
-      const matchSearch = inv.shopName.toLowerCase().includes(search.toLowerCase()) ||
-        inv.id.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "all" || inv.status === statusFilter;
+    return invoices.filter(i => {
+      const matchSearch = i.id.toLowerCase().includes(search.toLowerCase()) ||
+        i.shopName.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === "All" || i.status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [invoices, search, statusFilter]);
 
-  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const selectedInvoiceData = selectedInvoice ? invoices.find(i => i.id === selectedInvoice) : null;
 
-  // Summary stats
-  const totalRevenue = invoices.reduce((s, i) => s + i.total, 0);
-  const totalPaid = invoices.reduce((s, i) => s + i.paid, 0);
-  const totalOutstanding = invoices.reduce((s, i) => s + i.outstanding, 0);
-  const overdueCount = invoices.filter(i => i.status === 'SENT' || i.status === 'PARTIAL').length;
+  if (selectedInvoiceData) {
+    return (
+      <div className="space-y-6 animate-fade-in pb-10">
+        <button
+          onClick={() => setSelectedInvoice(null)}
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 transition-colors"
+        >
+          ← Back to Invoice List
+        </button>
 
-  const handlePayment = (reason: string) => {
-    if (!paymentModal) return;
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0 || amount > paymentModal.outstanding) {
-      toast.error("Invalid payment amount");
-      return;
-    }
-    const draft = createDraftFromAI('INVOICE_UPDATE', currentUser.name);
-    draft.description = `Record payment of ₹${amount.toLocaleString()} for ${paymentModal.shopName}`;
-    draft.payload = { invoiceId: paymentModal.invoiceId, payment: amount, reason };
-    addDraft(draft);
-    toast.success("Payment draft created — approve to record");
-    setPaymentModal(null);
-    setPaymentAmount("");
-    setReasonModal(false);
-  };
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
+              <FileText className="h-7 w-7" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Invoice {selectedInvoiceData.id}</h2>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span className="font-medium text-purple-600">{selectedInvoiceData.shopName}</span>
+                <span>•</span>
+                <span>Issued: {selectedInvoiceData.createdAt}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <StatusBadge status={selectedInvoiceData.status} size="md" />
+            <button className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
+              <Download className="h-4 w-4" /> Download PDF
+            </button>
+            {selectedInvoiceData.status !== 'PAID' && (
+              <button
+                onClick={() => {
+                  setPaymentModal({ open: true, invoiceId: selectedInvoiceData.id });
+                }}
+                className="rounded-xl purple-gradient px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90"
+              >
+                Record Payment
+              </button>
+            )}
+          </div>
+        </div>
 
-  const statusColors: Record<InvoiceStatus, string> = {
-    DRAFT: 'bg-gray-100 text-gray-600',
-    SENT: 'bg-blue-100 text-blue-700',
-    PARTIAL: 'bg-yellow-100 text-yellow-700',
-    PAID: 'bg-green-100 text-green-700',
-  };
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-4">
+            <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
+              <div className="p-4 border-b border-gray-50 bg-gray-50/50">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Itemized Breakdown</h3>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-50 text-left">
+                    <th className="px-4 py-3 font-semibold text-gray-600">SKU Name</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 text-center">Qty</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 text-right">Unit Price</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedInvoiceData.items.map((item, i) => (
+                    <tr key={i} className="border-b border-gray-50 last:border-0">
+                      <td className="px-4 py-3 text-gray-900 font-medium">{item.skuName}</td>
+                      <td className="px-4 py-3 text-center text-gray-600">{item.qty}</td>
+                      <td className="px-4 py-3 text-right text-gray-600">₹{item.unitPrice}</td>
+                      <td className="px-4 py-3 text-right text-gray-900 font-bold">₹{item.total.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-purple-50/50 font-bold text-lg">
+                    <td colSpan={3} className="px-4 py-4 text-right text-gray-600">Grand Total</td>
+                    <td className="px-4 py-4 text-right text-purple-700">₹{selectedInvoiceData.total.toLocaleString()}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-4 ai-glow">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                <h4 className="text-sm font-bold text-purple-900">Invoice Insights</h4>
+              </div>
+              <p className="text-xs text-purple-800 leading-relaxed">
+                This invoice was generated automatically based on the delivered stops in the today run.
+                The shop owner preferred digital payment last time.
+                <span className="block mt-1 font-semibold underline cursor-pointer">View Dispatch Evidence →</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-xl border border-gray-100 bg-white p-5">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">Payment Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500">Total Amount</span>
+                  <span className="font-semibold text-gray-900">₹{selectedInvoiceData.total.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500">Paid Amount</span>
+                  <span className="font-semibold text-green-600">₹{selectedInvoiceData.paid.toLocaleString()}</span>
+                </div>
+                <div className="h-px bg-gray-100" />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-gray-900">Outstanding</span>
+                  <span className="text-sm font-bold text-red-600">₹{selectedInvoiceData.outstanding.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {paymentModal.open && (
+          <PaymentModal
+            invoice={selectedInvoiceData}
+            onClose={() => setPaymentModal({ open: false, invoiceId: "" })}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
+    <div className="space-y-5 pb-10">
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Invoices & Payments</h1>
-          <p className="text-sm text-gray-500">{invoices.length} invoices</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Invoices & Payments</h1>
+          <p className="text-sm text-gray-500">Managing {invoices.length} invoices · ₹8.2L outstanding</p>
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button className="flex h-10 items-center gap-2 rounded-xl border border-purple-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-purple-50 transition-all">
+            <Download className="h-4 w-4" /> REPORTS
+          </button>
+          <button className="flex h-10 items-center gap-2 rounded-xl purple-gradient px-4 text-xs font-bold text-white shadow-lg shadow-purple-200 hover:opacity-90 transition-all">
+            <Sparkles className="h-4 w-4" /> GENERATE BATCH
+          </button>
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Revenue", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "Collected", value: `₹${(totalPaid / 100000).toFixed(1)}L`, icon: CheckCircle, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "Outstanding", value: `₹${(totalOutstanding / 100000).toFixed(1)}L`, icon: Clock, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "Pending", value: overdueCount, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "Total Revenue", value: "₹24.5L", icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Paid", value: "₹16.3L", icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
+          { label: "Outstanding", value: "₹8.2L", icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50" },
+          { label: "Overdue", value: "14", icon: Clock, color: "text-red-500", bg: "bg-red-50" },
         ].map(item => (
-          <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
-              <item.icon className="h-4 w-4" />
+          <div key={item.label} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.bg} ${item.color} mb-3`}>
+              <item.icon className="h-5 w-5" />
             </div>
-            <p className="text-xs text-gray-500">{item.label}</p>
-            <p className="text-xl font-bold text-gray-900">{item.value}</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</p>
+            <p className="text-2xl font-black text-gray-900 leading-none mt-1">{item.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px] w-full sm:w-auto">
-          <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+        <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 flex-1 min-w-[200px] hover:border-purple-300 transition-all focus-within:border-purple-400 focus-within:shadow-lg focus-within:shadow-purple-50">
+          <Search className="h-4 w-4 text-gray-400 shrink-0" />
           <input
             type="text"
             value={search}
-            onChange={e => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search invoices, shops…"
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search invoice ID, shop name, or ID…"
             className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
           />
         </div>
-        <div className="flex rounded-xl border border-gray-200 bg-white overflow-hidden">
-          {(['all', 'DRAFT', 'SENT', 'PARTIAL', 'PAID'] as const).map(f => (
+        <div className="flex rounded-2xl border border-gray-200 bg-white overflow-hidden p-1">
+          {["All", "DRAFT", "SENT", "PARTIAL", "PAID"].map(s => (
             <button
-              key={f}
-              onClick={() => { setStatusFilter(f); setPage(0); }}
-              className={`px-3 py-2 text-xs font-medium capitalize transition-colors ${statusFilter === f ? 'bg-purple-600 text-white' : 'text-gray-500 hover:bg-gray-50'
-                }`}
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${statusFilter === s ? 'purple-gradient text-white shadow-md shadow-purple-100' : 'text-gray-400 hover:text-gray-700'}`}
             >
-              {f === 'all' ? 'All' : f}
+              {s === 'All' ? 'All Invoices' : s}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Table */}
-      {paged.length === 0 ? (
-        <EmptyState icon={FileText} title="No invoices found" />
-      ) : (
-        <div className="rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm responsive-table">
-              <thead>
-                <tr className="border-b border-gray-100 bg-purple-50/50">
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Invoice</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Shop</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden md:table-cell">Total</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden md:table-cell">Paid</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Outstanding</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Status</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden lg:table-cell">Due Date</th>
-                  <th className="px-4 py-3"></th>
+      <div className="rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/50 text-left">
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice ID</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Shop Details</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Paid</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Outstanding</th>
+                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-16"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((inv) => (
+                <tr
+                  key={inv.id}
+                  onClick={() => setSelectedInvoice(inv.id)}
+                  className="border-b border-gray-50 last:border-0 hover:bg-purple-50/30 transition-colors cursor-pointer group"
+                >
+                  <td className="px-6 py-4 text-purple-600 font-black">#{inv.id}</td>
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-gray-900">{inv.shopName}</p>
+                    <p className="text-[10px] text-gray-400">ID: {inv.shopId}</p>
+                  </td>
+                  <td className="px-6 py-4 text-right font-bold text-gray-900">₹{inv.total.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-right font-bold text-green-600">₹{inv.paid.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-right font-black text-red-500">₹{inv.outstanding.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-center">
+                    <StatusBadge status={inv.status} />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-purple-400 group-hover:translate-x-1 transition-all mx-auto" />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {paged.map((inv) => (
-                  <tr key={inv.id} className="border-b border-gray-50 last:border-0 hover:bg-purple-50/20 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600" data-label="Invoice">{inv.id}</td>
-                    <td className="px-4 py-3" data-label="Shop">
-                      <p className="font-medium text-gray-900 text-sm">{inv.shopName}</p>
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-700 hidden md:table-cell" data-label="Total">
-                      ₹{inv.total.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right text-green-600 font-medium hidden md:table-cell" data-label="Paid">
-                      ₹{inv.paid.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-right" data-label="Outstanding">
-                      <span className={inv.outstanding > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>
-                        ₹{inv.outstanding.toLocaleString()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center" data-label="Status">
-                      <StatusBadge status={inv.status} />
-                    </td>
-                    <td className="px-4 py-3 text-center text-xs text-gray-400 hidden lg:table-cell" data-label="Due">
-                      {inv.dueDate}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {inv.status !== 'PAID' && inv.outstanding > 0 && (
-                        <button
-                          onClick={() => setPaymentModal({
-                            open: true,
-                            invoiceId: inv.id,
-                            shopName: inv.shopName,
-                            outstanding: inv.outstanding,
-                          })}
-                          className="flex items-center gap-1 rounded-lg bg-purple-100 px-3 py-1.5 text-xs font-semibold text-purple-700 transition-all hover:bg-purple-200 whitespace-nowrap"
-                        >
-                          <CreditCard className="h-3 w-3" /> Pay
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {filtered.length === 0 && (
+          <div className="py-20 text-center">
+            <EmptyState icon={FileText} title="No matching invoices found" />
+          </div>
+        )}
+      </div>
+
+      {paymentModal.open && (
+        <PaymentModal
+          invoice={invoices.find(i => i.id === paymentModal.invoiceId)!}
+          onClose={() => setPaymentModal({ open: false, invoiceId: "" })}
+        />
+      )}
+    </div>
+  );
+};
+
+const PaymentModal = ({ invoice, onClose }: { invoice: any, onClose: () => void }) => {
+  const [amount, setAmount] = useState(invoice.outstanding);
+  const [method, setMethod] = useState("Cash");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (amount > invoice.outstanding) {
+      toast.error("Amount cannot exceed outstanding balance!");
+      return;
+    }
+    toast.success(`Payment of ₹${amount} recorded via ${method} for ${invoice.shopName}`);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <form
+        onSubmit={handleSubmit}
+        className="relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-12 w-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
+            <CreditCard className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-gray-900">Record Payment</h2>
+            <p className="text-xs text-gray-500">Inv #{invoice.id} · {invoice.shopName}</p>
           </div>
         </div>
-      )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">{filtered.length} invoices</p>
-          <div className="flex items-center gap-2">
-            <button disabled={page === 0} onClick={() => setPage(p => p - 1)}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 disabled:opacity-30 hover:border-purple-300 hover:text-purple-600 transition-colors">
-              ← Prev
-            </button>
-            <span className="text-sm text-gray-500">{page + 1} / {totalPages}</span>
-            <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 disabled:opacity-30 hover:border-purple-300 hover:text-purple-600 transition-colors">
-              Next →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Modal */}
-      {paymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setPaymentModal(null)} />
-          <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-100 mb-4">
-                <CreditCard className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Record Payment</h3>
-              <p className="text-sm text-gray-500 mb-4">{paymentModal.shopName}</p>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-600">Outstanding: ₹{paymentModal.outstanding.toLocaleString()}</label>
-                  <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 focus-within:border-purple-400">
-                    <span className="text-gray-400 text-sm">₹</span>
-                    <input
-                      type="number"
-                      value={paymentAmount}
-                      onChange={e => setPaymentAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      max={paymentModal.outstanding}
-                      className="flex-1 bg-transparent text-sm text-gray-700 outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {[25, 50, 100].map(pct => (
-                    <button
-                      key={pct}
-                      onClick={() => setPaymentAmount(String(Math.round(paymentModal.outstanding * pct / 100)))}
-                      className="flex-1 rounded-lg border border-purple-200 bg-purple-50 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors"
-                    >
-                      {pct}%
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <div className="space-y-6">
+          <div>
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Payment Method</label>
+            <div className="grid grid-cols-3 gap-2">
+              {["Cash", "UPI", "Bank"].map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMethod(m)}
+                  className={`py-3 rounded-xl border text-xs font-bold transition-all ${method === m ? 'border-purple-600 bg-purple-50 text-purple-600' : 'border-gray-100 bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                >
+                  {m}
+                </button>
+              ))}
             </div>
-            <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
-              <button onClick={() => setPaymentModal(null)}
-                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                Cancel
-              </button>
-              <button
-                onClick={() => setReasonModal(true)}
-                disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
-                className="flex-1 rounded-xl purple-gradient py-2.5 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Create Draft
-              </button>
+          </div>
+          <div>
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Amount (Outstanding ₹{invoice.outstanding.toLocaleString()})</label>
+            <div className="relative">
+              <span className="absolute left-4 top-3.5 text-gray-400 font-bold">₹</span>
+              <input
+                type="number"
+                max={invoice.outstanding}
+                className="w-full h-12 rounded-xl border border-gray-100 bg-gray-50 pl-8 pr-4 text-sm font-bold outline-none focus:border-purple-400 focus:bg-white"
+                value={amount}
+                onChange={e => setAmount(Number(e.target.value))}
+                required
+              />
             </div>
           </div>
         </div>
-      )}
 
-      <ReasonTagModal
-        open={reasonModal}
-        title="Payment Reason"
-        onSubmit={handlePayment}
-        onCancel={() => setReasonModal(false)}
-      />
+        <div className="mt-8 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-12 rounded-xl border border-gray-100 text-sm font-bold text-gray-400 hover:bg-gray-50 transition-all font-black uppercase tracking-widest"
+          >
+            CANCEL
+          </button>
+          <button
+            type="submit"
+            className="flex-1 h-12 rounded-xl purple-gradient text-sm font-bold text-white shadow-lg shadow-purple-200 transition-all hover:opacity-90 active:scale-95 font-black uppercase tracking-widest"
+          >
+            CONFIRM
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

@@ -8,16 +8,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { currentUser } = useUserStore();
 
-  // Staff role: no sidebar, mobile-only view
-  if (currentUser.role === 'STAFF') {
-    return (
-      <div className="flex min-h-screen w-full flex-col bg-background">
-        <TopBar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 p-4 pb-24">{children}</main>
-        <MobileNav />
-      </div>
-    );
-  }
+
 
   return (
     <div className="flex min-h-screen w-full bg-background">

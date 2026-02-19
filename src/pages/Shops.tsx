@@ -1,235 +1,236 @@
 import { useState, useMemo } from "react";
-import { Store, Search, Upload, MapPin, Phone, CreditCard, Star, AlertTriangle } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { useShopStore, useDraftStore, useUserStore } from "@/store";
-import EmptyState from "@/components/shared/EmptyState";
-import StatusBadge from "@/components/shared/StatusBadge";
-import ConfirmModal from "@/components/shared/ConfirmModal";
 import { toast } from "sonner";
+import {
+  Store, Plus, FileDown, LayoutGrid, List, MoreHorizontal, FileInput
+} from "lucide-react";
+import StatusBadge from "@/components/shared/StatusBadge";
+import FilterBar from "@/components/shared/FilterBar";
+import RiskBanner from "@/components/shared/RiskBanner";
+import ShopTable from "@/components/shops/ShopTable";
+import ShopProfile from "@/components/shops/ShopProfile";
+import CSVImportWizard from "@/components/shared/CSVImportWizard";
+import GeoFixModal from "@/components/shops/GeoFixModal";
 import { createDraftFromAI } from "@/data/generators";
 
 const Shops = () => {
-  const [search, setSearch] = useState("");
-  const [zoneFilter, setZoneFilter] = useState("All");
-  const [qualityFilter, setQualityFilter] = useState<"all" | "low" | "high">("all");
-  const [page, setPage] = useState(0);
-  const [selectedShop, setSelectedShop] = useState<string | null>(null);
-  const [importModal, setImportModal] = useState(false);
-  const PAGE_SIZE = 15;
-
   const { shops } = useShopStore();
   const { addDraft } = useDraftStore();
   const { currentUser } = useUserStore();
 
-  const zones = ["All", ...Array.from(new Set(shops.map(s => s.zone)))];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isGeoFixOpen, setIsGeoFixOpen] = useState(false);
+  const [geoFixShops, setGeoFixShops] = useState<typeof shops>([]);
 
-  const filtered = useMemo(() => {
-    return shops.filter(s => {
-      const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.owner.toLowerCase().includes(search.toLowerCase()) ||
-        s.area.toLowerCase().includes(search.toLowerCase());
-      const matchZone = zoneFilter === "All" || s.zone === zoneFilter;
-      const matchQuality = qualityFilter === "all" ||
-        (qualityFilter === "low" ? s.qualityScore < 70 : s.qualityScore >= 70);
-      return matchSearch && matchZone && matchQuality;
-    });
-  }, [shops, search, zoneFilter, qualityFilter]);
+  const activeFilter = searchParams.get("filter") || "all";
+  const searchTerm = searchParams.get("q") || "";
+  const viewMode = (searchParams.get("view") as "list" | "grid") || "list";
 
-  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const selectedShopData = selectedShop ? shops.find(s => s.id === selectedShop) : null;
-
-  const handleImport = () => {
-    const draft = createDraftFromAI('SHOP_IMPORT', currentUser.name);
-    draft.description = 'Import 12 new shops from uploaded CSV';
-    addDraft(draft);
-    toast.success("CSV import draft created — approve to commit");
-    setImportModal(false);
+  const updateSearch = (q: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (q) newParams.set("q", q);
+    else newParams.delete("q");
+    setSearchParams(newParams);
   };
 
-  const getQualityColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-50';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+  const updateFilter = (filter: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("filter", filter);
+    setSearchParams(newParams);
+  };
+
+  const updateViewMode = (view: "list" | "grid") => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("view", view);
+    setSearchParams(newParams);
+  };
+
+  const filteredShops = useMemo(() => {
+    return shops.filter(shop => {
+      const matchesSearch = shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        shop.area.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = activeFilter === 'all' ||
+        (activeFilter === 'pending' && (!shop.lat || !shop.lng)) ||
+        (activeFilter === 'premium' && shop.creditLimit > 50000);
+      return matchesSearch && matchesFilter;
+    });
+  }, [shops, searchTerm, activeFilter]);
+
+  const stats = useMemo(() => ({
+    total: shops.length,
+    pendingGeo: shops.filter(s => !s.lat || !s.lng).length,
+    highRisk: shops.filter(s => s.balance > s.creditLimit * 0.9).length
+  }), [shops]);
+
+  const selectedShop = useMemo(() => shops.find(s => s.id === selectedShopId), [shops, selectedShopId]);
+
+  const handleBatchGeoFix = () => {
+    const missing = shops.filter(s => !s.lat || !s.lng);
+    setGeoFixShops(missing);
+    setIsGeoFixOpen(true);
+  };
+
+  const handleSingleGeoFix = (id: string) => {
+    const shop = shops.find(s => s.id === id);
+    if (shop) {
+      setGeoFixShops([shop]);
+      setIsGeoFixOpen(true);
+    }
+  };
+
+  const handleNewShop = () => {
+    const draft = createDraftFromAI('SHOP_IMPORT', currentUser.name);
+    addDraft(draft);
+    toast.success("New Shop Onboarding drafted by AI", {
+      description: "Review details in the Decision Journal",
+      action: {
+        label: "OPEN JOURNAL",
+        onClick: () => (window as any).dispatchJournalEvent?.() || toast.info("Check the Journal history icon")
+      }
+    });
+  };
+
+  const handleImport = (data: any[]) => {
+    const draft = createDraftFromAI('SHOP_UPDATE', currentUser.name);
+    draft.description = `Bulk Import ${data.length} Shops via CSV`;
+    draft.payload = { count: data.length, firstRecord: data[0] };
+    addDraft(draft);
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-6 animate-fade-in pb-10 relative">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Shops</h1>
-          <p className="text-sm text-gray-500">{shops.length} shops · {shops.filter(s => s.qualityScore < 70).length} low quality</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Shop Network</h1>
+          <p className="text-sm text-gray-500">Manage {shops.length} retail partners and geo-coordinates</p>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setImportModal(true)}
-            className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:bg-purple-100"
+            onClick={() => setIsImportOpen(true)}
+            className="flex h-10 items-center gap-2 rounded-xl border border-gray-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all active:scale-95"
           >
-            <Upload className="h-4 w-4" /> Import CSV
+            <FileInput className="h-4 w-4" /> IMPORT
+          </button>
+          <button className="flex h-10 items-center gap-2 rounded-xl border border-gray-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all active:scale-95">
+            <FileDown className="h-4 w-4" /> EXPORT
+          </button>
+          <button
+            onClick={handleNewShop}
+            className="flex h-10 items-center gap-2 rounded-xl purple-gradient px-4 text-xs font-bold text-white shadow-lg shadow-purple-200 hover:opacity-90 transition-all active:scale-95"
+          >
+            <Plus className="h-4 w-4" /> ADD SHOP
           </button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px] w-full sm:w-auto">
-          <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search shops, owners, areas…"
-            className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
-          />
-        </div>
-        <select
-          value={zoneFilter}
-          onChange={e => { setZoneFilter(e.target.value); setPage(0); }}
-          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-purple-400"
-        >
-          {zones.map(z => <option key={z}>{z}</option>)}
-        </select>
-        <div className="flex rounded-xl border border-gray-200 bg-white overflow-hidden">
-          {(['all', 'low', 'high'] as const).map(f => (
+      {stats.pendingGeo > 0 && (
+        <RiskBanner
+          severity="destructive"
+          title={`${stats.pendingGeo} Shops Missing Geo-Coordinates`}
+          description="These shops cannot be included in AI dispatch plans until fixed."
+          actionLabel="FIX LOCATIONS"
+          onAction={handleBatchGeoFix}
+        />
+      )}
+
+      <FilterBar
+        searchPlaceholder="Search by name, area, or ID..."
+        initialSearch={searchTerm}
+        onSearch={updateSearch}
+        activeFilter={activeFilter}
+        onFilterChange={updateFilter}
+        options={[
+          { id: 'all', label: 'All Shops', count: stats.total },
+          { id: 'pending', label: 'Missing Geo', count: stats.pendingGeo },
+          { id: 'premium', label: 'High Credit', count: 12 },
+        ]}
+        rightElement={
+          <div className="flex rounded-xl border border-gray-100 bg-white p-0.5 ml-2">
             <button
-              key={f}
-              onClick={() => { setQualityFilter(f); setPage(0); }}
-              className={`px-3 py-2 text-xs font-medium capitalize transition-colors ${qualityFilter === f ? 'bg-purple-600 text-white' : 'text-gray-500 hover:bg-gray-50'
-                }`}
+              onClick={() => updateViewMode('grid')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-purple-100 text-purple-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
             >
-              {f === 'all' ? 'All' : f === 'low' ? 'Low Quality' : 'High Quality'}
+              <LayoutGrid className="h-4 w-4" />
             </button>
+            <button
+              onClick={() => updateViewMode('list')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-purple-100 text-purple-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
+        }
+      />
+
+      {viewMode === 'list' ? (
+        <ShopTable
+          shops={filteredShops}
+          onOpenShop={setSelectedShopId}
+          onFixGeo={handleSingleGeoFix}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredShops.map(shop => (
+            <div
+              key={shop.id}
+              className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm hover:border-purple-200 transition-all group cursor-pointer hover:shadow-md"
+              onClick={() => setSelectedShopId(shop.id)}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="h-12 w-12 rounded-2xl bg-gray-50 group-hover:bg-purple-50 flex items-center justify-center text-gray-400 group-hover:text-purple-600 transition-colors">
+                  <Store className="h-6 w-6" />
+                </div>
+                <button className="text-gray-300 hover:text-gray-600"><MoreHorizontal className="h-5 w-5" /></button>
+              </div>
+              <h3 className="font-bold text-gray-900 mb-1">{shop.name}</h3>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">{shop.area}</p>
+
+              <div className="space-y-3 border-t border-gray-50 pt-4">
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-gray-400 font-medium">Outstanding</span>
+                  {/* Fixed formatting for mock data */}
+                  <span className="font-black text-gray-900">₹{shop.balance.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-gray-400 font-medium">Last Visit</span>
+                  <span className="font-bold text-gray-600">Yesterday</span>
+                </div>
+              </div>
+
+              <button className="w-full mt-5 py-2.5 rounded-xl border border-purple-100 text-[10px] font-black text-purple-600 uppercase tracking-widest hover:bg-purple-50 transition-all">
+                VIEW HISTORY
+              </button>
+            </div>
           ))}
         </div>
-      </div>
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Total Shops", value: shops.length, icon: Store, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "Missing Geo", value: shops.filter(s => !s.hasGeo).length, icon: MapPin, color: "text-purple-600", bg: "bg-red-0" },
-          { label: "No Contact", value: shops.filter(s => !s.hasContact).length, icon: Phone, color: "text-purple-600", bg: "bg-yellow-0" },
-          { label: "Low Quality", value: shops.filter(s => s.qualityScore < 70).length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-orange-0" },
-        ].map(item => (
-          <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
-              <item.icon className="h-4 w-4" />
-            </div>
-            <p className="text-xs text-gray-500">{item.label}</p>
-            <p className="text-xl font-bold text-gray-900">{item.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Table */}
-      {paged.length === 0 ? (
-        <EmptyState icon={Store} title="No shops found" />
-      ) : (
-        <div className="rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm responsive-table">
-              <thead>
-                <tr className="border-b border-gray-100 bg-purple-50/50">
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Shop</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden md:table-cell">Area</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden lg:table-cell">Cadence</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden md:table-cell">Credit Limit</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden md:table-cell">Outstanding</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Quality</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider hidden lg:table-cell">Geo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paged.map((shop) => (
-                  <tr
-                    key={shop.id}
-                    onClick={() => setSelectedShop(shop.id === selectedShop ? null : shop.id)}
-                    className="border-b border-gray-50 last:border-0 hover:bg-purple-50/30 transition-colors cursor-pointer"
-                  >
-                    <td className="px-4 py-3" data-label="Shop">
-                      <div>
-                        <p className="font-medium text-gray-900">{shop.name}</p>
-                        <p className="text-xs text-gray-400">{shop.owner}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell" data-label="Area">
-                      <div>
-                        <p>{shop.area}</p>
-                        <p className="text-xs text-gray-400">{shop.zone}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 hidden lg:table-cell" data-label="Cadence">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${shop.cadence === 'Daily' ? 'bg-green-100 text-green-700' :
-                        shop.cadence === 'Alternate' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                        {shop.cadence}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-700 hidden md:table-cell" data-label="Credit">
-                      {shop.hasCreditLimit ? `₹${shop.creditLimit.toLocaleString()}` : <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-right hidden md:table-cell" data-label="Outstanding">
-                      <span className={shop.outstanding > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>
-                        {shop.outstanding > 0 ? `₹${shop.outstanding.toLocaleString()}` : '₹0'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center" data-label="Quality">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <div className="w-12 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${shop.qualityScore >= 80 ? 'bg-green-500' : shop.qualityScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${shop.qualityScore}%` }}
-                          />
-                        </div>
-                        <span className={`text-xs font-bold ${getQualityColor(shop.qualityScore).split(' ')[0]}`}>
-                          {shop.qualityScore}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center hidden lg:table-cell" data-label="Geo">
-                      {shop.hasGeo ? (
-                        <MapPin className="h-4 w-4 text-green-500 mx-auto" />
-                      ) : (
-                        <MapPin className="h-4 w-4 text-gray-200 mx-auto" />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">{filtered.length} shops</p>
-          <div className="flex items-center gap-2">
-            <button
-              disabled={page === 0}
-              onClick={() => setPage(p => p - 1)}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 disabled:opacity-30 hover:border-purple-300 hover:text-purple-600 transition-colors"
-            >← Prev</button>
-            <span className="text-sm text-gray-500">{page + 1} / {totalPages}</span>
-            <button
-              disabled={page >= totalPages - 1}
-              onClick={() => setPage(p => p + 1)}
-              className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 disabled:opacity-30 hover:border-purple-300 hover:text-purple-600 transition-colors"
-            >Next →</button>
-          </div>
-        </div>
+      {/* Shop Profile Drawer */}
+      {selectedShop && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" onClick={() => setSelectedShopId(null)} />
+          <ShopProfile shop={selectedShop} onClose={() => setSelectedShopId(null)} />
+        </>
       )}
 
-      {/* CSV Import Modal */}
-      <ConfirmModal
-        open={importModal}
-        title="Import Shops from CSV"
-        description="This will create a draft import card. You must approve it before shops are committed to the system."
-        onConfirm={handleImport}
-        onCancel={() => setImportModal(false)}
+      {/* Import Wizard */}
+      <CSVImportWizard
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onImport={handleImport}
+        type="Shops"
       />
+
+      {/* Geo Fix Modal */}
+      {isGeoFixOpen && (
+        <GeoFixModal
+          shops={geoFixShops}
+          onClose={() => setIsGeoFixOpen(false)}
+        />
+      )}
     </div>
   );
 };

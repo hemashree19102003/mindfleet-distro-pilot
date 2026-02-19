@@ -14,6 +14,10 @@ import Invoices from "./pages/Invoices";
 import Staff from "./pages/Staff";
 import Insights from "./pages/Insights";
 import SettingsPage from "./pages/SettingsPage";
+import StaffRoute from "./pages/StaffRoute";
+import StaffStops from "./pages/StaffStops";
+import StaffSummary from "./pages/StaffSummary";
+import StaffProfile from "./pages/StaffProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +39,13 @@ const App = () => (
           <Route element={<AppLayout><Staff /></AppLayout>} path="/staff" />
           <Route element={<AppLayout><Insights /></AppLayout>} path="/insights" />
           <Route element={<AppLayout><SettingsPage /></AppLayout>} path="/settings" />
+
+          {/* Staff Routes */}
+          <Route element={<AppLayout><StaffRoute /></AppLayout>} path="/route" />
+          <Route element={<AppLayout><StaffStops /></AppLayout>} path="/stops" />
+          <Route element={<AppLayout><StaffSummary /></AppLayout>} path="/summary" />
+          <Route element={<AppLayout><StaffProfile /></AppLayout>} path="/profile" />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -2,6 +2,7 @@ import type {
     Staff, Shop, InventorySKU, InventoryBatch, Invoice, InvoiceItem,
     DispatchPlan, DraftCard, ChatMessage, User
 } from '../store/types';
+import { SHOPS_LIST } from './shops_data';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -49,63 +50,8 @@ export const STAFF_LIST: Staff[] = staffNames.map((name, i) => ({
     status: i === 13 ? 'On Leave' : i === 14 ? 'Inactive' : 'Active',
 }));
 
-// ─── Shops (100) ──────────────────────────────────────────────────────────────
-const shopPrefixes = [
-    'Sri', 'New', 'Shri', 'Sai', 'Om', 'Jai', 'Maa', 'Royal', 'Super', 'Star',
-    'Annapoorna', 'Saravana', 'Murugan', 'Ganesh', 'Balaji', 'Lakshmi', 'Durga',
-    'Venkat', 'Ravi', 'Kumar', 'Suresh', 'Arun', 'Vijay', 'Deepak', 'Rajesh'
-];
-const shopSuffixes = [
-    'Store', 'Mart', 'Provisions', 'Shop', 'Traders', 'Agencies', 'Depot',
-    'Enterprises', 'Distributors', 'Wholesale'
-];
-const areas = [
-    'T. Nagar', 'Mylapore', 'Anna Nagar', 'Adyar', 'Velachery', 'Chromepet',
-    'Tambaram', 'KK Nagar', 'Porur', 'Guindy', 'Perungudi', 'Sholinganallur',
-    'Thoraipakkam', 'OMR', 'Pallavaram', 'Ambattur', 'Avadi', 'Poonamallee',
-    'Madipakkam', 'Nanganallur'
-];
-const ownerFirstNames = [
-    'P.', 'R.', 'S.', 'V.', 'M.', 'G.', 'K.', 'T.', 'N.', 'D.',
-    'A.', 'B.', 'C.', 'L.', 'J.'
-];
-const ownerLastNames = [
-    'Lakshmi', 'Kumar', 'Devi', 'Balaji', 'Vasanth', 'Maha', 'Ganesh',
-    'Ravi', 'Murugan', 'Sakthi', 'Ayyappan', 'Venkat', 'Padma', 'Raja', 'Selvi'
-];
-
-export const SHOPS_LIST: Shop[] = Array.from({ length: 100 }, (_, i) => {
-    const hasGeo = Math.random() > 0.15;
-    const hasContact = Math.random() > 0.1;
-    const hasCreditLimit = Math.random() > 0.2;
-    const missingCount = [!hasGeo, !hasContact, !hasCreditLimit].filter(Boolean).length;
-    const qualityScore = Math.max(40, 100 - missingCount * 25 - rand(0, 10));
-    const outstanding = rand(0, 50000);
-    const creditLimit = hasCreditLimit ? rand(10000, 100000) : 0;
-    const area = areas[i % areas.length];
-    const zone = zones[Math.floor(i / 20)];
-    const staffIdx = Math.floor(i / 7);
-
-    return {
-        id: `shop${i + 1}`,
-        name: `${pick(shopPrefixes)} ${pick(shopSuffixes)}`,
-        owner: `${pick(ownerFirstNames)} ${pick(ownerLastNames)}`,
-        phone: hasContact ? phones() : '',
-        area,
-        zone,
-        cadence: pick(['Daily', 'Alternate', 'Weekly']),
-        lastDelivery: dateStr(rand(0, 5)),
-        outstanding,
-        creditLimit,
-        hasGeo,
-        hasContact,
-        hasCreditLimit,
-        qualityScore,
-        lat: 13.0827 + (Math.random() - 0.5) * 0.5,
-        lng: 80.2707 + (Math.random() - 0.5) * 0.5,
-        assignedStaffId: STAFF_LIST[staffIdx % STAFF_LIST.length].id,
-    };
-});
+// ─── Shops ────────────────────────────────────────────────────────────────────
+export { SHOPS_LIST };
 
 // ─── Inventory SKUs + Batches (300 batches) ───────────────────────────────────
 const skuDefs = [
@@ -141,24 +87,36 @@ export const INVENTORY_SKUS: InventorySKU[] = skuDefs.map((sku, i) => {
             id: `batch${batchCounter++}`,
             skuId: `sku${i + 1}`,
             skuName: sku.name,
-            batchId: `B-${String(batchCounter).padStart(3, '0')}`,
-            receivedDate: dateStr(rand(1, 30)),
-            expiryDate: futureDate(rand(3, 60)),
-            quantity: qty,
-            unitPrice: sku.unitPrice,
+            batchId: `B-${String(batchCounter).padStart(3, '0')}`, // Legacy
+            batch_code: `B-${String(batchCounter).padStart(3, '0')}`,
+            receivedDate: dateStr(rand(1, 30)), // Legacy
+            received_at: dateStr(rand(1, 30)),
+            expiryDate: futureDate(rand(3, 60)), // Legacy
+            expiry_at: futureDate(rand(3, 60)),
+            quantity: qty, // Legacy
+            qty_received: qty,
+            qty_available: qty,
+            unitPrice: sku.unitPrice, // Legacy
+            unit_price: sku.unitPrice,
             category: sku.category,
         };
     });
-    const available = batches.reduce((s, b) => s + b.quantity, 0);
+    const available = batches.reduce((s, b) => s + b.qty_available, 0);
     return {
         id: `sku${i + 1}`,
         name: sku.name,
         category: sku.category,
+        unit: 'unit',
+        active: true,
+        pricing: { cost_price: sku.unitPrice * 0.8, sell_price: sku.unitPrice },
+        stock: { available_qty: available, low_stock: available < sku.threshold },
+        batches,
+
+        // Legacy
         available,
         threshold: sku.threshold,
         avgDaily: sku.avgDaily,
-        lowStock: available < sku.threshold,
-        batches,
+        lowStock: available < sku.threshold
     };
 });
 
@@ -174,20 +132,27 @@ export const INVOICES_LIST: Invoice[] = Array.from({ length: 200 }, (_, i) => {
     const items: InvoiceItem[] = Array.from({ length: rand(2, 6) }, () => {
         const sku = pick(INVENTORY_SKUS);
         const qty = rand(5, 50);
+        const price = sku.batches[0]?.unit_price || 50;
         return {
             skuName: sku.name,
             qty,
-            unitPrice: sku.batches[0]?.unitPrice || 50,
-            total: qty * (sku.batches[0]?.unitPrice || 50),
+            unitPrice: price, // Legacy
+            unit_price: price,
+            total: qty * price, // Legacy
+            line_total: qty * price,
         };
     });
     return {
         id: `INV-${2400 + i + 1}`,
-        shopId: shop.id,
-        shopName: shop.name,
-        total,
-        paid,
-        outstanding: total - paid,
+        shopId: shop.id, // Legacy
+        shopName: shop.name, // Legacy
+        shop: { id: shop.id, name: shop.name },
+        invoice_date: dateStr(rand(0, 30)),
+        total_amount: total,
+        outstanding_amount: total - paid,
+        total, // Legacy
+        paid, // Legacy
+        outstanding: total - paid, // Legacy
         status,
         createdAt: dateStr(rand(0, 30)),
         dueDate: futureDate(rand(0, 15)),
@@ -195,19 +160,25 @@ export const INVOICES_LIST: Invoice[] = Array.from({ length: 200 }, (_, i) => {
     };
 });
 
-// ─── Dispatch Plan ────────────────────────────────────────────────────────────
+// ─── Dispatch Plan (uses geo-clustering + TSP route optimization) ─────────────
+import { generateOptimizedPlan } from '../utils/routeOptimizer';
+
+const _activeStaff = STAFF_LIST.filter(s => s.status === 'Active');
+const _optimizedPlan = generateOptimizedPlan(SHOPS_LIST, _activeStaff);
+
 export const INITIAL_DISPATCH_PLAN: DispatchPlan = {
     id: 'dp1',
     date: '2025-02-17',
+    dispatch_date: '2025-02-17',
     status: 'APPROVED',
-    confidence: 91,
-    assignments: STAFF_LIST.filter(s => s.status === 'Active').map((staff, i) => ({
-        staffId: staff.id,
-        shopIds: SHOPS_LIST
-            .filter(s => s.assignedStaffId === staff.id)
-            .map(s => s.id),
+    confidence: _optimizedPlan.optimizationScore,
+    confidence_score: _optimizedPlan.optimizationScore,
+    assignments: _optimizedPlan.assignments.map(a => ({
+        staffId: a.staffId,
+        shopIds: a.shopIds,   // Already in optimized delivery order
+        stops: [],
     })),
-    inputsHash: 'sha256:a3f8c2d1e4b7f9a2c5d8e1f4a7b0c3d6',
+    inputs_hash: 'sha256:a3f8c2d1e4b7f9a2c5d8e1f4a7b0c3d6',
     objectiveWeights: {
         distance: 0.35,
         workload: 0.30,
@@ -219,6 +190,8 @@ export const INITIAL_DISPATCH_PLAN: DispatchPlan = {
         'SLA window: 6AM–2PM',
         'Avoid credit-blocked shops',
         'FIFO inventory dispatch',
+        'Geo-clustered assignments',
+        'TSP-optimized stop order',
     ],
     overrideHistory: [
         {
@@ -240,6 +213,12 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         type: 'DISPATCH_PLAN',
         title: 'Draft Dispatch Plan – 17 Feb',
         description: 'AI-generated plan for 100 shops across 13 active staff',
+        summary: [
+            '100 shops assigned to 13 staff members',
+            'Estimated revenue: ₹4.8L',
+            'Distance optimization: -18% vs manual',
+            'SLA coverage: 100%'
+        ],
         confidence: 91,
         status: 'APPROVED',
         createdAt: '2025-02-17T08:00:00',
@@ -247,12 +226,21 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         createdBy: 'AI',
         payload: { planId: 'dp1' },
         explanation: 'Historical demand patterns show 17 Feb as a high-demand day (+12% vs average). Staff allocation weighted by zone density and delivery SLA windows. Route optimization reduced total distance by 18% vs manual planning.',
+        risks: [
+            { level: 'WARN', text: 'Karthik V. route exceeds 6h limit' },
+            { level: 'INFO', text: '2 shops using approximated locations' }
+        ]
     },
     {
         id: 'draft2',
         type: 'INVENTORY_ADJUSTMENT',
         title: 'Inventory Adjustment – Milk 500ml',
         description: 'Adjust stock level for Milk 500ml in Zone A',
+        summary: [
+            'Increase Milk 500ml by 50 units',
+            'Warehouse: WH-CHENNAI-1',
+            'Priority: High'
+        ],
         confidence: 85,
         status: 'DRAFT',
         createdAt: '2025-02-17T10:00:00',
@@ -260,12 +248,20 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         createdBy: 'Priya Menon',
         payload: { skuId: 'sku1', adjustment: 50 },
         explanation: 'Stock below threshold. Recommend adding 50 units from warehouse.',
+        risks: [
+            { level: 'CRITICAL', text: 'Stockout imminent (4h)' }
+        ]
     },
     {
         id: 'draft3',
         type: 'INVOICE_UPDATE',
         title: 'Invoice Batch – 62 Invoices',
         description: 'Generate invoices for all delivered stops today',
+        summary: [
+            '62 invoices to be generated',
+            'Total value: ₹3.25L',
+            'Eligible shops only'
+        ],
         confidence: 98,
         status: 'DRAFT',
         createdAt: '2025-02-17T14:00:00',
@@ -273,25 +269,15 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         createdBy: 'AI',
         payload: { count: 62 },
         explanation: 'All delivered stops eligible for invoicing. No credit-blocked shops included.',
+        risks: [
+            { level: 'INFO', text: 'All shops verified for credit limits' }
+        ]
     },
 ];
 
 // ─── Initial Chat Messages ─────────────────────────────────────────────────────
-export const INITIAL_CHAT: ChatMessage[] = [
-    {
-        id: 'msg1',
-        role: 'user',
-        content: 'Plan today\'s dispatch for 17 Feb',
-        timestamp: '2025-02-17T08:00:00',
-    },
-    {
-        id: 'msg2',
-        role: 'ai',
-        content: 'Here\'s the draft dispatch plan based on today\'s demand forecast, staff availability, and inventory levels:',
-        timestamp: '2025-02-17T08:00:05',
-        draftId: 'draft1',
-    },
-];
+export const INITIAL_CHAT: ChatMessage[] = [];
+
 
 // ─── AI Response Generator ────────────────────────────────────────────────────
 const aiResponses: Record<string, { content: string; draftType?: DraftCard['type'] }> = {
@@ -321,6 +307,12 @@ export function generateAIResponse(userMessage: string): { content: string; draf
     if (lower.includes('inventory') || lower.includes('stock')) return aiResponses.inventory;
     if (lower.includes('invoice') || lower.includes('payment')) return aiResponses.invoice;
     if (lower.includes('risk') || lower.includes('warning') || lower.includes('alert')) return aiResponses.risk;
+    if (lower.includes('add profile') || lower.includes('add person') || lower.includes('onboard')) {
+        return {
+            content: 'I\'ve prepared a new staff profile template. Please fill in the details below:',
+            draftType: 'ADD_STAFF'
+        };
+    }
     return aiResponses.default;
 }
 
@@ -329,42 +321,92 @@ export function createDraftFromAI(type: DraftCard['type'], createdBy: string): D
         DISPATCH_PLAN: {
             title: `Draft Dispatch Plan – ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`,
             description: 'AI-generated optimized dispatch plan',
+            summary: ['Optimized delivery routes', 'Workload-balanced staff', 'SLA window priority'],
             explanation: 'Routes optimized for distance and workload balance using historical demand data.',
         },
         INVENTORY_ADJUSTMENT: {
             title: 'Inventory Adjustment Request',
             description: 'Stock level adjustment for low-inventory SKUs',
+            summary: ['Replenish safety stock', 'Inventory ledger update'],
             explanation: 'Stock below safety threshold. Adjustment required to prevent stockout.',
         },
         SHOP_IMPORT: {
-            title: 'Shop Import – CSV Upload',
-            description: 'Import new shops from uploaded CSV file',
-            explanation: 'Validates geo, contact, and credit data before committing.',
+            title: 'New Shop Onboarding – AI Analysis',
+            description: 'AI-analyzed shop import from pending registrations',
+            summary: ['Batch import 42 new accounts', 'GPS coordinates verified for 38 shops', 'Credit risk assessment completed'],
+            explanation: 'Validated new shop entries against regional demographics. Optimized initial credit limits based on shop area and projected demand.',
+        },
+        INVOICE_GENERATION: {
+            title: 'Invoice Batch Generation',
+            description: 'Generate invoices for all delivered stops',
+            summary: ['Bulk invoice run', 'Digital signing ready'],
+            explanation: 'Only delivered stops included. Credit-blocked shops excluded.',
+        },
+        INVENTORY_UPDATE: {
+            title: 'Inventory Update',
+            description: 'Bulk update SKU attributes',
+            summary: ['Price update', 'Category shift'],
+            explanation: 'Updating price lists based on revised procurement costs.',
+        },
+        OVERRIDE_PLAN: {
+            title: 'Override Dispatch Plan',
+            description: 'Manual adjustment to active plan',
+            summary: ['Human override tags', 'Rebalancing committed'],
+            explanation: 'Adjusting assignments based on emergency staff unavailability.',
         },
         INVOICE_UPDATE: {
             title: 'Invoice Batch Generation',
             description: 'Generate invoices for all delivered stops',
+            summary: ['Bulk invoice run', 'Digital signing ready'],
             explanation: 'Only delivered stops included. Credit-blocked shops excluded.',
         },
         SHOP_REASSIGN: {
             title: 'Shop Reassignment',
             description: 'Reassign shop to different staff member',
+            summary: ['Proximity move', 'Balanced staff workload'],
             explanation: 'Proximity optimization triggered reassignment.',
         },
         ROUTE_REORDER: {
             title: 'Route Reorder',
             description: 'Reorder delivery stops for optimal routing',
+            summary: ['Distance reduction', 'Reduced traffic wait-time'],
             explanation: 'Traffic and distance analysis suggests reordering.',
         },
         STOP_SKIP: {
             title: 'Stop Skip Request',
             description: 'Skip delivery stop for today',
+            summary: ['Store closed override', 'Rescheduled for tomorrow'],
             explanation: 'Shop requested skip or is temporarily closed.',
         },
         REBALANCE: {
             title: 'Workload Rebalance',
             description: 'Rebalance shop assignments across staff',
+            summary: ['Over-capacity mitigation', 'Staff fatigue reduction'],
             explanation: 'Detected uneven workload distribution. Rebalancing recommended.',
+        },
+        SHOP_UPDATE: {
+            title: 'Shop Detail Update',
+            description: 'Update shop metadata or location',
+            summary: ['Data enrichment', 'GPS verification'],
+            explanation: 'Manual or AI-triggered shop update.',
+        },
+        STAFF_UPDATE: {
+            title: 'Staff Record Update',
+            description: 'Update staff capacity or status',
+            summary: ['Quota adjustment', 'Shift change'],
+            explanation: 'Administrative update to staff record or roster.',
+        },
+        CADENCE_CHANGE: {
+            title: 'Delivery Cadence Update',
+            description: 'Update preferred delivery days for shop',
+            summary: ['Route optimization impact', 'Customer preference update'],
+            explanation: 'Adjusting delivery days based on customer request or route efficiency.',
+        },
+        ADD_STAFF: {
+            title: 'New Staff Onboarding',
+            description: 'Manual addition of a delivery partner to the fleet',
+            summary: ['Awaiting personal details', 'Pending vehicle assignment', 'Zone allocation logic ready'],
+            explanation: 'Enter the details in the form below to register a new staff member. AI will automatically suggest the most efficient zone based on current fleet density.',
         },
     };
 
@@ -374,12 +416,32 @@ export function createDraftFromAI(type: DraftCard['type'], createdBy: string): D
         type,
         title: template.title || 'New Draft',
         description: template.description || '',
+        summary: template.summary || [],
         confidence: rand(70, 98),
         status: 'DRAFT',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         createdBy,
-        payload: {},
+        payload: type === 'DISPATCH_PLAN' ? { staffCount: rand(10, 15), shopCount: rand(80, 150) } : {},
         explanation: template.explanation,
+        reasoning: [
+            "Optimized stop sequences to reduce backtracking by 14%",
+            "Prioritized premium shops with pending large outstanding collections",
+            "Allocated routes based on vehicle capacity utilization (avg 92%)"
+        ],
+        risks: [
+            { level: 'WARN', text: "2 shops have missing GPS coordinates (approximated)" },
+            { level: 'CRITICAL', text: "Milk 500ml stock may run out if demand exceeds 8% variance" },
+            { level: 'INFO', text: "Suresh Babu has a high-stop route (48 stops)" }
+        ],
+        confidenceBreakdown: {
+            dataQuality: rand(85, 95),
+            historicalReliability: rand(75, 98),
+            inventoryRisk: rand(80, 92)
+        },
+        shortages: type === 'DISPATCH_PLAN' ? [
+            { skuName: "Milk 500ml", missing: 42 },
+            { skuName: "Bread White", missing: 12 }
+        ] : undefined
     };
 }

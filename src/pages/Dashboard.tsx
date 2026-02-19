@@ -1,6 +1,7 @@
+import { Link } from "react-router-dom";
 import {
   Sparkles, TrendingUp, Package, Store, Users, FileText,
-  IndianRupee, AlertTriangle, CheckCircle, Clock, Truck
+  IndianRupee, AlertTriangle, CheckCircle, Clock, Truck, Activity
 } from "lucide-react";
 import { useInventoryStore, useInvoiceStore, useShopStore, useStaffStore, useDraftStore } from "@/store";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -12,19 +13,22 @@ const Dashboard = () => {
   const { staff } = useStaffStore();
   const { drafts } = useDraftStore();
 
-  const totalRevenue = invoices.reduce((s, i) => s + i.paid, 0);
-  const totalOutstanding = invoices.reduce((s, i) => s + i.outstanding, 0);
+  // Calculate KPI values
+  const dispatchRun = { status: 'IN_PROGRESS', planned: 22, approved: 18, progress: 12, completed: 8 };
+  const deliveryStats = { delivered: 312, pending: 110, failed: 6 };
+  const slaRisks = 4;
+  const inventoryRisks = skus.filter(s => s.available < 50).length;
   const lowStockCount = skus.filter(s => s.lowStock).length;
-  const activeStaff = staff.filter(s => s.status === 'Active').length;
-  const pendingDrafts = drafts.filter(d => d.status === 'DRAFT').length;
+  const dataQualityRisks = shops.filter(s => !s.lat || !s.lng || !s.phone).length;
+  const staffUtil = 28; // avg stops per staff
 
   const kpis = [
-    { label: "Revenue Collected", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-0", change: "+12.4%", },
-    { label: "Outstanding", value: `₹${(totalOutstanding / 100000).toFixed(1)}L`, icon: Clock, color: "text-purple-600", bg: "bg-yellow-0", change: "-3.2%" },
-    { label: "Active Staff", value: `${activeStaff} / ${staff.length}`, icon: Users, color: "text-purple-600", bg: "bg-green-0", change: "86.7%" },
-    { label: "Shops Covered", value: shops.length, icon: Store, color: "text-purple-600", bg: "bg-blue-0", change: "100%" },
-    { label: "Low Stock SKUs", value: lowStockCount, icon: Package, color: "text-purple-600", bg: "bg-red-0", change: `${lowStockCount} alerts` },
-    { label: "Pending Drafts", value: pendingDrafts, icon: FileText, color: "text-purple-600", bg: "bg-orange-0", change: "Needs review" },
+    { label: "Dispatch Status", value: "In Progress", icon: Truck, color: "text-purple-600", bg: "bg-purple-0", change: "12 / 18 Approved", path: "/dispatch" },
+    { label: "Delivery Progress", value: "73%", icon: CheckCircle, color: "text-purple-600", bg: "bg-green-0", change: "312 Delivered", path: "/deliveries" },
+    { label: "SLA Risk", value: slaRisks, icon: AlertTriangle, color: "text-purple-600", bg: "bg-red-0", change: "High Priority", path: "/insights" },
+    { label: "Inventory Risk", value: inventoryRisks, icon: Package, color: "text-purple-600", bg: "bg-orange-0", change: "Stockout Alerts", path: "/inventory" },
+    { label: "Data Quality", value: dataQualityRisks, icon: Activity, color: "text-purple-600", bg: "bg-blue-0", change: "Missing GPS/Phone", path: "/shops" },
+    { label: "Staff Utilization", value: `${staffUtil}`, icon: Users, color: "text-purple-600", bg: "bg-purple-0", change: "Avg Stops/Staff", path: "/staff" },
   ];
 
   return (
@@ -38,7 +42,7 @@ const Dashboard = () => {
       {/* KPI Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="rounded-xl border border-gray-100 bg-white p-5 card-hover">
+          <Link key={kpi.label} to={kpi.path} className="rounded-xl border border-gray-100 bg-white p-5 card-hover block">
             <div className="flex items-center justify-between mb-3">
               <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${kpi.bg} ${kpi.color}`}>
                 <kpi.icon className="h-5 w-5" />
@@ -47,7 +51,7 @@ const Dashboard = () => {
             </div>
             <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
             <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
-          </div>
+          </Link>
         ))}
       </div>
 

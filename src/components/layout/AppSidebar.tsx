@@ -1,20 +1,29 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sparkles, LayoutDashboard, Truck, Package, Store,
-  Boxes, FileText, Users, BarChart3, Settings, X
+  Boxes, FileText, Users, BarChart3, Settings, X,
+  MapPin, List, User
 } from "lucide-react";
+import { useUserStore } from "@/store";
 
-const navItems = [
+const ADMIN_NAV_ITEMS = [
   { title: "Command Center", path: "/", icon: Sparkles, ai: true },
   { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { title: "Dispatch", path: "/dispatch", icon: Truck },
   { title: "Deliveries", path: "/deliveries", icon: Package },
   { title: "Shops", path: "/shops", icon: Store },
   { title: "Inventory", path: "/inventory", icon: Boxes },
-  { title: "Invoices", path: "/invoices", icon: FileText },
+  { title: "Invoices & Payments", path: "/invoices", icon: FileText },
   { title: "Staff", path: "/staff", icon: Users },
   { title: "Insights", path: "/insights", icon: BarChart3 },
   { title: "Settings", path: "/settings", icon: Settings },
+];
+
+const STAFF_NAV_ITEMS = [
+  { title: "My Route", path: "/route", icon: MapPin },
+  { title: "My Stops", path: "/stops", icon: List },
+  { title: "Day Summary", path: "/summary", icon: BarChart3 },
+  { title: "My Profile", path: "/profile", icon: User },
 ];
 
 interface Props {
@@ -24,6 +33,8 @@ interface Props {
 
 const AppSidebar = ({ open, onClose }: Props) => {
   const location = useLocation();
+  const { currentUser } = useUserStore();
+  const navItems = currentUser.role === 'STAFF' ? STAFF_NAV_ITEMS : ADMIN_NAV_ITEMS;
 
   return (
     <>
@@ -63,7 +74,7 @@ const AppSidebar = ({ open, onClose }: Props) => {
               >
                 <item.icon className="h-[18px] w-[18px] shrink-0" />
                 <span className="flex-1">{item.title}</span>
-                {item.ai && (
+                {(item as any).ai && (
                   <span className={`flex h-5 items-center rounded-full px-2 text-[10px] font-bold ${isActive ? "bg-white/20 text-white" : "bg-purple-100 text-purple-600"
                     }`}>
                     AI
@@ -78,11 +89,11 @@ const AppSidebar = ({ open, onClose }: Props) => {
         <div className="border-t border-purple-100 p-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full purple-gradient text-white text-xs font-bold shrink-0">
-              A
+              {currentUser.name[0]}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-gray-800 truncate">Arjun Sharma</p>
-              <p className="text-[10px] text-purple-500">Admin</p>
+              <p className="text-xs font-semibold text-gray-800 truncate">{currentUser.name}</p>
+              <p className="text-[10px] text-purple-500">{currentUser.role}</p>
             </div>
           </div>
         </div>
