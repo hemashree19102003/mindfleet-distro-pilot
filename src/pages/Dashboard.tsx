@@ -19,12 +19,12 @@ const Dashboard = () => {
   const pendingDrafts = drafts.filter(d => d.status === 'DRAFT').length;
 
   const kpis = [
-    { label: "Revenue Collected", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-50", change: "+12.4%" },
-    { label: "Outstanding", value: `₹${(totalOutstanding / 100000).toFixed(1)}L`, icon: Clock, color: "text-yellow-600", bg: "bg-yellow-50", change: "-3.2%" },
-    { label: "Active Staff", value: `${activeStaff} / ${staff.length}`, icon: Users, color: "text-green-600", bg: "bg-green-50", change: "86.7%" },
-    { label: "Shops Covered", value: shops.length, icon: Store, color: "text-blue-600", bg: "bg-blue-50", change: "100%" },
-    { label: "Low Stock SKUs", value: lowStockCount, icon: Package, color: "text-red-600", bg: "bg-red-50", change: `${lowStockCount} alerts` },
-    { label: "Pending Drafts", value: pendingDrafts, icon: FileText, color: "text-orange-600", bg: "bg-orange-50", change: "Needs review" },
+    { label: "Revenue Collected", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-0", change: "+12.4%", },
+    { label: "Outstanding", value: `₹${(totalOutstanding / 100000).toFixed(1)}L`, icon: Clock, color: "text-purple-600", bg: "bg-yellow-0", change: "-3.2%" },
+    { label: "Active Staff", value: `${activeStaff} / ${staff.length}`, icon: Users, color: "text-purple-600", bg: "bg-green-0", change: "86.7%" },
+    { label: "Shops Covered", value: shops.length, icon: Store, color: "text-purple-600", bg: "bg-blue-0", change: "100%" },
+    { label: "Low Stock SKUs", value: lowStockCount, icon: Package, color: "text-purple-600", bg: "bg-red-0", change: `${lowStockCount} alerts` },
+    { label: "Pending Drafts", value: pendingDrafts, icon: FileText, color: "text-purple-600", bg: "bg-orange-0", change: "Needs review" },
   ];
 
   return (
@@ -145,8 +145,8 @@ const Dashboard = () => {
                   <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
                     <div
                       className={`h-full rounded-full ${status === 'PAID' ? 'bg-green-500' :
-                          status === 'PARTIAL' ? 'bg-yellow-500' :
-                            status === 'SENT' ? 'bg-blue-500' : 'bg-gray-300'
+                        status === 'PARTIAL' ? 'bg-yellow-500' :
+                          status === 'SENT' ? 'bg-blue-500' : 'bg-gray-300'
                         }`}
                       style={{ width: `${pct}%` }}
                     />

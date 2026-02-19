@@ -73,10 +73,10 @@ const Dispatch = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: "Staff Active", value: `${activeStaff.length}`, icon: User, color: "text-purple-600", bg: "bg-purple-50" },
-              { label: "Shops Assigned", value: "100", icon: MapPin, color: "text-blue-600", bg: "bg-blue-50" },
-              { label: "Low Stock Risks", value: "4", icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50" },
-              { label: "Confidence", value: `${plan.confidence}%`, icon: Sparkles, color: "text-green-600", bg: "bg-green-50" },
+              { label: "Staff Active", value: `${activeStaff.length}`, icon: User, color: "text-purple-600", bg: "bg-purple-0" },
+              { label: "Shops Assigned", value: "100", icon: MapPin, color: "text-purple-600", bg: "bg-blue-0" },
+              { label: "Low Stock Risks", value: "4", icon: AlertTriangle, color: "text-purple-600", bg: "bg-yellow-0" },
+              { label: "Confidence", value: `${plan.confidence}%`, icon: Sparkles, color: "text-purple-600", bg: "bg-green-0" },
             ].map(item => (
               <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
                 <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.bg} ${item.color} mb-3`}>
@@ -150,8 +150,8 @@ const Dispatch = () => {
                       key={s.id}
                       onClick={() => setSelectedStaffId(s.id)}
                       className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${selectedStaffId === s.id
-                          ? "border-purple-400 bg-purple-50 shadow-sm"
-                          : "border-gray-100 bg-white hover:border-purple-200 hover:bg-purple-50/50"
+                        ? "border-purple-400 bg-purple-50 shadow-sm"
+                        : "border-gray-100 bg-white hover:border-purple-200 hover:bg-purple-50/50"
                         }`}
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full purple-gradient text-white text-sm font-bold shrink-0">
@@ -422,7 +422,7 @@ const SimulatedMap = ({
       </div>
 
       {/* Map Canvas */}
-      <div className="relative rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 overflow-hidden" style={{ height: '420px' }}>
+      <div className="relative rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 via-green-50 to-purple-50 overflow-hidden h-[300px] sm:h-[420px]">
         {/* Grid lines */}
         {[20, 40, 60, 80].map(p => (
           <div key={p}>

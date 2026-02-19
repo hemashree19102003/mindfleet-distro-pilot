@@ -24,24 +24,24 @@ const Deliveries = () => {
       {/* Route stops */}
       <div className="space-y-3">
         {myShops.slice(0, 15).map((shop, i) => (
-          <div key={shop.id} className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:border-purple-200 transition-all">
+          <div key={shop.id} className="flex flex-wrap md:flex-nowrap items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 hover:border-purple-200 transition-all">
             <div className="flex h-10 w-10 items-center justify-center rounded-full purple-gradient text-white text-sm font-bold shrink-0">
               {i + 1}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-[200px]">
               <p className="font-semibold text-gray-900">{shop.name}</p>
               <p className="text-xs text-gray-500">{shop.area} · {shop.cadence}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full md:w-auto justify-end mt-2 md:mt-0">
               <button
                 onClick={() => toast.success(`Navigating to ${shop.name}`)}
-                className="flex items-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors"
+                className="flex flex-1 md:flex-none items-center justify-center gap-1 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors"
               >
                 <Navigation className="h-3 w-3" /> Navigate
               </button>
               <button
                 onClick={() => toast.success(`${shop.name} marked as delivered`)}
-                className="flex items-center gap-1 rounded-lg purple-gradient px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-all"
+                className="flex flex-1 md:flex-none items-center justify-center gap-1 rounded-lg purple-gradient px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-all"
               >
                 <CheckCircle className="h-3 w-3" /> Delivered
               </button>

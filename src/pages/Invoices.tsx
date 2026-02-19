@@ -78,10 +78,10 @@ const Invoices = () => {
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total Revenue", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "Collected", value: `₹${(totalPaid / 100000).toFixed(1)}L`, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Outstanding", value: `₹${(totalOutstanding / 100000).toFixed(1)}L`, icon: Clock, color: "text-yellow-600", bg: "bg-yellow-50" },
-          { label: "Pending", value: overdueCount, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Total Revenue", value: `₹${(totalRevenue / 100000).toFixed(1)}L`, icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "Collected", value: `₹${(totalPaid / 100000).toFixed(1)}L`, icon: CheckCircle, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "Outstanding", value: `₹${(totalOutstanding / 100000).toFixed(1)}L`, icon: Clock, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "Pending", value: overdueCount, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
         ].map(item => (
           <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
@@ -95,7 +95,7 @@ const Invoices = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px]">
+        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px] w-full sm:w-auto">
           <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
           <input
             type="text"

@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { Sparkles, Truck, Boxes, FileText, Store } from "lucide-react";
+import { Sparkles, Truck, Boxes, FileText, Store, Package } from "lucide-react";
 
 const mobileNavItems = [
     { title: "AI", path: "/", icon: Sparkles },
     { title: "Dispatch", path: "/dispatch", icon: Truck },
+    { title: "Deliveries", path: "/deliveries", icon: Package },
     { title: "Inventory", path: "/inventory", icon: Boxes },
     { title: "Invoices", path: "/invoices", icon: FileText },
     { title: "Shops", path: "/shops", icon: Store },

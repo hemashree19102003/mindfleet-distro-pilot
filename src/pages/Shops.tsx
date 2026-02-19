@@ -72,7 +72,7 @@ const Shops = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px]">
+        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px] w-full sm:w-auto">
           <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
           <input
             type="text"
@@ -106,10 +106,10 @@ const Shops = () => {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total Shops", value: shops.length, icon: Store, color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "Missing Geo", value: shops.filter(s => !s.hasGeo).length, icon: MapPin, color: "text-red-600", bg: "bg-red-50" },
-          { label: "No Contact", value: shops.filter(s => !s.hasContact).length, icon: Phone, color: "text-yellow-600", bg: "bg-yellow-50" },
-          { label: "Low Quality", value: shops.filter(s => s.qualityScore < 70).length, icon: AlertTriangle, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Total Shops", value: shops.length, icon: Store, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "Missing Geo", value: shops.filter(s => !s.hasGeo).length, icon: MapPin, color: "text-purple-600", bg: "bg-red-0" },
+          { label: "No Contact", value: shops.filter(s => !s.hasContact).length, icon: Phone, color: "text-purple-600", bg: "bg-yellow-0" },
+          { label: "Low Quality", value: shops.filter(s => s.qualityScore < 70).length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-orange-0" },
         ].map(item => (
           <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
@@ -160,8 +160,8 @@ const Shops = () => {
                     </td>
                     <td className="px-4 py-3 hidden lg:table-cell" data-label="Cadence">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${shop.cadence === 'Daily' ? 'bg-green-100 text-green-700' :
-                          shop.cadence === 'Alternate' ? 'bg-blue-100 text-blue-700' :
-                            'bg-gray-100 text-gray-600'
+                        shop.cadence === 'Alternate' ? 'bg-blue-100 text-blue-700' :
+                          'bg-gray-100 text-gray-600'
                         }`}>
                         {shop.cadence}
                       </span>

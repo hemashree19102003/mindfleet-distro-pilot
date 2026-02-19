@@ -42,10 +42,10 @@ const Staff = () => {
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total Staff", value: staff.length, icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "Active", value: staff.filter(s => s.status === 'Active').length, icon: TrendingUp, color: "text-green-600", bg: "bg-green-50" },
-          { label: "On Leave", value: staff.filter(s => s.status === 'On Leave').length, icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50" },
-          { label: "At Risk", value: staff.filter(s => s.risk).length, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Total Staff", value: staff.length, icon: Users, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "Active", value: staff.filter(s => s.status === 'Active').length, icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "On Leave", value: staff.filter(s => s.status === 'On Leave').length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: "At Risk", value: staff.filter(s => s.risk).length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
         ].map(item => (
           <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
@@ -59,7 +59,7 @@ const Staff = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px]">
+        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px] w-full sm:w-auto">
           <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
           <input
             type="text"
@@ -98,24 +98,36 @@ const Staff = () => {
                   key={s.id}
                   onClick={() => setSelectedStaff(s.id === selectedStaff ? null : s.id)}
                   className={`rounded-xl border p-4 cursor-pointer transition-all hover:shadow-sm ${selectedStaff === s.id
-                      ? 'border-purple-400 bg-purple-50'
-                      : 'border-gray-100 bg-white hover:border-purple-200'
+                    ? 'border-purple-400 bg-purple-50'
+                    : 'border-gray-100 bg-white hover:border-purple-200'
                     }`}
                 >
-                  <div className="flex items-center gap-4">
-                    {/* Avatar */}
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white text-lg font-bold shrink-0 ${s.status !== 'Active' ? 'bg-gray-300' : 'purple-gradient'
-                      }`}>
-                      {s.name[0]}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                      {/* Avatar */}
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white text-lg font-bold shrink-0 ${s.status !== 'Active' ? 'bg-gray-300' : 'purple-gradient'
+                        }`}>
+                        {s.name[0]}
+                      </div>
+
+                      {/* Info (Mobile header) */}
+                      <div className="flex-1 min-w-0 sm:hidden">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-gray-900">{s.name}</p>
+                          <StatusBadge status={s.status} />
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    {/* Info (Desktop) */}
+                    <div className="flex-1 min-w-0 w-full">
+                      <div className="hidden sm:flex items-center gap-2 flex-wrap">
                         <p className="font-semibold text-gray-900">{s.name}</p>
                         <StatusBadge status={s.status} />
                         {s.risk && <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-700">⚠ Risk</span>}
                       </div>
+
+                      {/* Mobile details block */}
                       <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
                         <span className="flex items-center gap-1"><Truck className="h-3 w-3" />{s.vehicle}</span>
                         <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{s.zone}</span>
@@ -124,7 +136,7 @@ const Staff = () => {
                     </div>
 
                     {/* Stats */}
-                    <div className="hidden sm:flex flex-col items-end gap-1 shrink-0">
+                    <div className="flex w-full sm:w-auto sm:flex-col justify-between sm:justify-center items-center sm:items-end gap-1 shrink-0 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-0 border-gray-100">
                       <p className="text-sm font-bold text-gray-900">{shopCount} shops</p>
                       <p className="text-xs text-gray-400">{s.distance}</p>
                       <div className="flex items-center gap-2">

@@ -8,6 +8,7 @@ const navItems = [
   { title: "Command Center", path: "/", icon: Sparkles, ai: true },
   { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { title: "Dispatch", path: "/dispatch", icon: Truck },
+  { title: "Deliveries", path: "/deliveries", icon: Package },
   { title: "Shops", path: "/shops", icon: Store },
   { title: "Inventory", path: "/inventory", icon: Boxes },
   { title: "Invoices", path: "/invoices", icon: FileText },

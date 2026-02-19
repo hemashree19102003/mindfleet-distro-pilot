@@ -29,43 +29,43 @@ const CommandCenter = () => {
   const pendingDrafts = drafts.filter(d => d.status === 'DRAFT');
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-7rem)]">
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8.5rem)] lg:h-[calc(100vh-7rem)]">
       {/* ── Chat Section ── */}
-      <div className="flex flex-col rounded-2xl border border-purple-100 bg-white overflow-hidden shadow-sm lg:flex-[7]">
+      <div className="flex flex-col rounded-2xl border border-purple-100 bg-white overflow-hidden shadow-sm flex-1 min-w-0">
         {/* Chat Header */}
-        <div className="flex items-center gap-3 border-b border-purple-100 px-4 md:px-6 py-4 shrink-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
-            <Sparkles className="h-4.5 w-4.5 text-purple-600" />
+        <div className="flex items-center gap-3 border-b border-purple-100 px-4 md:px-6 py-3 shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100">
+            <Sparkles className="h-4 w-4 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Command Center</h2>
-            <p className="text-[11px] text-gray-500">AI-assisted operational control</p>
+            <h2 className="text-xs font-bold text-gray-900">Command Center</h2>
+            <p className="text-[10px] text-gray-500">AI-assisted operational control</p>
           </div>
-          <span className="ml-auto flex items-center gap-1.5 rounded-full bg-purple-100 px-2.5 py-1 text-[10px] font-semibold text-purple-700">
+          <span className="ml-auto flex items-center gap-1.5 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
             <span className="h-1.5 w-1.5 rounded-full bg-purple-600 animate-pulse-soft" />
             AI Active
           </span>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-5">
           {messages.map((msg) => {
             const draft = msg.draftId ? drafts.find(d => d.id === msg.draftId) : null;
             return (
               <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in`}>
                 {msg.role === 'ai' && (
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 mt-1">
-                    <Bot className="h-4 w-4 text-purple-600" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-100 mt-0.5">
+                    <Bot className="h-3.5 w-3.5 text-purple-600" />
                   </div>
                 )}
-                <div className={`space-y-3 ${msg.role === 'user' ? 'max-w-xs md:max-w-md' : 'max-w-full md:max-w-2xl flex-1'}`}>
+                <div className={`space-y-2 ${msg.role === 'user' ? 'max-w-sm md:max-w-lg' : 'max-w-full md:max-w-5xl flex-1'}`}>
                   {msg.role === 'user' ? (
-                    <div className="rounded-2xl rounded-br-md bg-purple-600 px-5 py-3 text-sm text-white shadow-sm">
+                    <div className="rounded-2xl rounded-br-md bg-purple-600 px-4 py-2.5 text-xs text-white shadow-sm">
                       {msg.content}
                     </div>
                   ) : (
                     <>
-                      <p className="text-sm text-gray-600 leading-relaxed">{msg.content}</p>
+                      <p className="text-xs text-gray-600 leading-relaxed bg-gray-50/50 p-2 rounded-lg -ml-2">{msg.content}</p>
                       {draft && <DraftCard draft={draft} />}
                     </>
                   )}
@@ -77,14 +77,14 @@ const CommandCenter = () => {
           {/* Typing indicator */}
           {isTyping && (
             <div className="flex gap-3 animate-fade-in">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100">
-                <Bot className="h-4 w-4 text-purple-600" />
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-100">
+                <Bot className="h-3.5 w-3.5 text-purple-600" />
               </div>
-              <div className="flex items-center gap-1.5 rounded-2xl bg-gray-100 px-4 py-3">
+              <div className="flex items-center gap-1 rounded-2xl bg-gray-100 px-3 py-2">
                 {[0, 1, 2].map(i => (
                   <span
                     key={i}
-                    className="h-2 w-2 rounded-full bg-purple-400 animate-bounce"
+                    className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-bounce"
                     style={{ animationDelay: `${i * 0.15}s` }}
                   />
                 ))}
@@ -95,42 +95,42 @@ const CommandCenter = () => {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-purple-100 px-4 md:px-6 pb-4 md:pb-5 pt-4 space-y-3 shrink-0">
+        <div className="border-t border-purple-100 px-4 md:px-6 pb-4 md:pb-5 pt-3 space-y-3 shrink-0">
           {/* Quick Chips */}
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {["Plan Dispatch", "Show Risks", "Update Inventory", "Generate Invoices", "Rebalance Routes"].map((chip) => (
               <button
                 key={chip}
                 onClick={() => { setInput(chip); }}
-                className="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1.5 text-xs font-medium text-purple-600 transition-all hover:bg-purple-100 hover:border-purple-400"
+                className="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[10px] font-medium text-purple-600 transition-all hover:bg-purple-100 hover:border-purple-400"
               >
                 {chip}
               </button>
             ))}
           </div>
           {/* Input */}
-          <div className="flex items-center gap-3 rounded-2xl border border-purple-200 bg-purple-50/50 px-4 py-3 transition-all focus-within:border-purple-400 focus-within:bg-white focus-within:shadow-[0_0_16px_-4px_rgba(147,51,234,0.15)]">
+          <div className="flex items-center gap-3 rounded-2xl border border-purple-200 bg-purple-50/50 px-4 py-2.5 transition-all focus-within:border-purple-400 focus-within:bg-white focus-within:shadow-[0_0_16px_-4px_rgba(147,51,234,0.15)]">
             <input
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="Ask me to plan dispatch, adjust stock, or analyze performance…"
-              className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+              className="flex-1 bg-transparent text-xs text-gray-700 placeholder:text-gray-400 outline-none"
             />
             <button
               onClick={handleSend}
               disabled={!input.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl purple-gradient text-white transition-all hover:opacity-90 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="flex h-8 w-8 items-center justify-center rounded-xl purple-gradient text-white transition-all hover:opacity-90 hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       </div>
 
       {/* ── Context Panel ── */}
-      <div className="rounded-2xl border border-purple-100 bg-white overflow-hidden shadow-sm lg:flex-[3] flex flex-col min-h-[300px] lg:min-h-0">
+      <div className="flex bg-white rounded-2xl border border-purple-100 overflow-hidden shadow-sm w-full lg:w-72 xl:w-80 shrink-0 flex-col h-64 lg:h-auto lg:min-h-0">
         {/* Header */}
         <div className="px-5 pt-5 pb-2 shrink-0">
           <h3 className="text-sm font-semibold text-gray-900">Context Intelligence</h3>
@@ -144,8 +144,8 @@ const CommandCenter = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 px-1 py-2.5 text-[11px] font-medium capitalize transition-all relative ${activeTab === tab
-                  ? "text-purple-600"
-                  : "text-gray-400 hover:text-gray-600"
+                ? "text-purple-600"
+                : "text-gray-400 hover:text-gray-600"
                 }`}
             >
               {tab === "recent" ? "Activity" : tab}
@@ -164,12 +164,12 @@ const CommandCenter = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {activeTab === "today" && (
             <div className="space-y-3 animate-fade-in">
-              <ContextCard icon={Sparkles} label="Active Dispatch" value="1" color="text-purple-600" bg="bg-purple-50" />
-              <ContextCard icon={FileText} label="Pending Drafts" value={String(pendingDrafts.length)} color="text-yellow-600" bg="bg-yellow-50" />
-              <ContextCard icon={Activity} label="Deliveries" value="312 / 428" color="text-green-600" bg="bg-green-50" subtitle="72.9% complete" />
-              <ContextCard icon={IndianRupee} label="Revenue Today" value="₹2,84,000" color="text-purple-700" bg="bg-purple-50" />
-              <ContextCard icon={Users} label="Staff Active" value="13 / 15" color="text-blue-600" bg="bg-blue-50" />
-              <ContextCard icon={MapPin} label="Shops Covered" value="100" color="text-green-600" bg="bg-green-50" />
+              <ContextCard icon={Sparkles} label="Active Dispatch" value="1" color="text-purple-600" bg="bg-purple-0" />
+              <ContextCard icon={FileText} label="Pending Drafts" value={String(pendingDrafts.length)} color="text-purple-600" bg="bg-yellow-0" />
+              <ContextCard icon={Activity} label="Deliveries" value="312 / 428" color="text-green-600" bg="bg-green-0" subtitle="72.9% complete" />
+              <ContextCard icon={IndianRupee} label="Revenue Today" value="₹2,84,000" color="text-purple-700" bg="bg-purple-0" />
+              <ContextCard icon={Users} label="Staff Active" value="13 / 15" color="text-blue-600" bg="bg-blue-0" />
+              <ContextCard icon={MapPin} label="Shops Covered" value="100" color="text-green-600" bg="bg-green-0" />
             </div>
           )}
 

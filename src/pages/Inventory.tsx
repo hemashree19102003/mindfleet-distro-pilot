@@ -20,7 +20,8 @@ const Inventory = () => {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 12;
 
-  const { skus, adjustStock } = useInventoryStore();
+  const { skus: allSkus, adjustStock } = useInventoryStore();
+  const skus = allSkus.filter(s => s.category === 'Dairy');
   const { addDraft } = useDraftStore();
   const { currentUser } = useUserStore();
 
@@ -201,13 +202,13 @@ const Inventory = () => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px]">
+        <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 flex-1 min-w-[200px] w-full sm:w-auto">
           <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
           <input
             type="text"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
-            placeholder="Search SKUs…"
+            placeholder="Search Dairy products…"
             className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
           />
         </div>
