@@ -98,14 +98,10 @@ export interface CurrentUserContext {
 }
 
 // ─── Staff ────────────────────────────────────────────────────────────────────
-export type VehicleType = 'Bike' | 'Auto' | 'Mini-Van' | 'Tempo';
-
 export interface Staff {
   id: string;
   name: string;
   phone: string;
-  vehicle: VehicleType;
-  zone: string;
   capacity: number;
   stops: number;
   distance: string;

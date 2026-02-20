@@ -22,7 +22,6 @@ const futureDate = (daysAhead: number) => {
 // ─── Users ────────────────────────────────────────────────────────────────────
 export const USERS: User[] = [
     { id: 'u1', name: 'Arjun Sharma', role: 'ADMIN' },
-    { id: 'u2', name: 'Priya Menon', role: 'MANAGER' },
     { id: 'u3', name: 'Ravi Kumar', role: 'STAFF' },
 ];
 
@@ -32,16 +31,12 @@ const staffNames = [
     'Arun D.', 'Karthik V.', 'Manoj P.', 'Srinivas R.', 'Deepak K.',
     'Rajesh N.', 'Vijay S.', 'Anand T.', 'Balu K.', 'Senthil P.'
 ];
-const zones = ['Zone A', 'Zone B', 'Zone C', 'Zone D', 'Zone E'];
-const vehicles = ['Bike', 'Auto', 'Mini-Van', 'Tempo'] as const;
 const phones = () => `+91 ${rand(70000, 99999)}${rand(10000, 99999)}`;
 
 export const STAFF_LIST: Staff[] = staffNames.map((name, i) => ({
     id: `s${i + 1}`,
     name,
     phone: phones(),
-    vehicle: pick(vehicles),
-    zone: zones[i % zones.length],
     capacity: rand(35, 50),
     stops: rand(25, 48),
     distance: `${rand(18, 38)} km`,
@@ -282,7 +277,7 @@ export const INITIAL_CHAT: ChatMessage[] = [];
 // ─── AI Response Generator ────────────────────────────────────────────────────
 const aiResponses: Record<string, { content: string; draftType?: DraftCard['type'] }> = {
     dispatch: {
-        content: 'I\'ve analyzed today\'s demand patterns and generated an optimized dispatch plan. 13 active staff will cover 100 shops across 5 zones.',
+        content: 'I\'ve analyzed today\'s demand patterns and generated an optimized dispatch plan. 13 active staff will cover 100 shops.',
         draftType: 'DISPATCH_PLAN',
     },
     inventory: {
@@ -405,8 +400,8 @@ export function createDraftFromAI(type: DraftCard['type'], createdBy: string): D
         ADD_STAFF: {
             title: 'New Staff Onboarding',
             description: 'Manual addition of a delivery partner to the fleet',
-            summary: ['Awaiting personal details', 'Pending vehicle assignment', 'Zone allocation logic ready'],
-            explanation: 'Enter the details in the form below to register a new staff member. AI will automatically suggest the most efficient zone based on current fleet density.',
+            summary: ['Awaiting personal details', 'Onboarding phase verification'],
+            explanation: 'Enter the details in the form below to register a new staff member.',
         },
     };
 

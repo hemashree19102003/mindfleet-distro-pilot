@@ -9,15 +9,14 @@ const Insights = () => {
   const { shops } = useShopStore();
   const [activeTab, setActiveTab] = useState<"Business" | "Logistics" | "Staff">("Business");
 
-  // Zone revenue breakdown
-  const zoneRevenue = shops.reduce((acc, shop) => {
-    const shopInvoices = invoices.filter(i => i.shopId === shop.id);
-    const revenue = shopInvoices.reduce((s, i) => s + i.paid, 0);
-    acc[shop.zone] = (acc[shop.zone] || 0) + revenue;
-    return acc;
-  }, {} as Record<string, number>);
+  // Staff revenue breakdown
+  const staffStats = [
+    { name: 'Ramesh', revenue: 142000 },
+    { name: 'Rajesh', revenue: 98000 },
+    { name: 'Shiva', revenue: 76000 }
+  ];
 
-  const maxZoneRevenue = Math.max(...Object.values(zoneRevenue));
+  const maxStaffRevenue = Math.max(...staffStats.map(s => s.revenue));
 
   // Top performing staff
   const topStaff = [...staff].sort((a, b) => b.performance - a.performance).slice(0, 5);
@@ -70,23 +69,23 @@ const Insights = () => {
             </div>
           ))}
 
-          {/* Zone Revenue */}
+          {/* Staff Revenue */}
           <div className="lg:col-span-2 rounded-xl border border-gray-100 bg-white p-5">
             <div className="flex items-center gap-2 mb-4">
               <IndianRupee className="h-4 w-4 text-purple-600" />
-              <h3 className="font-semibold text-gray-900">Revenue Contribution by Zone</h3>
+              <h3 className="font-semibold text-gray-900">Revenue Contribution by staff</h3>
             </div>
             <div className="space-y-4">
-              {Object.entries(zoneRevenue).map(([zone, rev]) => (
-                <div key={zone} className="space-y-1">
+              {staffStats.map(({ name, revenue }) => (
+                <div key={name} className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">{zone}</span>
-                    <span className="text-sm font-semibold text-gray-900">₹{(rev / 1000).toFixed(0)}K</span>
+                    <span className="text-sm text-gray-700">{name}</span>
+                    <span className="text-sm font-semibold text-gray-900">₹{(revenue / 1000).toFixed(0)}K</span>
                   </div>
                   <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                     <div
                       className="h-full rounded-full purple-gradient transition-all duration-700"
-                      style={{ width: `${(rev / maxZoneRevenue) * 100}%` }}
+                      style={{ width: `${(revenue / maxStaffRevenue) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -100,8 +99,8 @@ const Insights = () => {
               <h3 className="text-sm font-bold text-purple-900">AI Growth Strategy</h3>
             </div>
             <p className="text-xs text-purple-800 leading-relaxed mb-4">
-              North Zone has the highest revenue but West Zone has 14% higher basket value.
-              Consider reassigning Rahul K (Top Performer) to West Zone to boost retention.
+              Ramesh has the highest volume but Rajesh has 14% higher average order value.
+              Consider rebalancing 5 shops from Shiva to Rajesh to optimize weekend delivery capacity.
             </p>
             <button className="w-full rounded-lg bg-purple-600 text-white py-2 text-xs font-bold shadow-md hover:opacity-90">
               Generate Growth Draft

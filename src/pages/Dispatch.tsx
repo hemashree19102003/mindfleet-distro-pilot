@@ -188,12 +188,45 @@ const Dispatch = () => {
       )}
 
       {activeTab === 'map' && (
-        <RouteMap
-          routes={[]}
-          stops={[]} // Pass actual stops here 
-          onSelectStaff={() => { }}
-          onSelectStop={setSelectedStopId}
-        />
+        <div className="h-[650px] w-full rounded-3xl overflow-hidden border border-purple-100 shadow-2xl relative z-10">
+          <RouteMap
+            routes={boardAssignments.map(b => ({
+              staff_id: b.staff_id,
+              points: b.stops.map(s => ({ lat: 13.0827 + (Math.random() - 0.5) * 0.04, lng: 80.2707 + (Math.random() - 0.5) * 0.04 }))
+            }))}
+            stops={(() => {
+              // Define cluster centers for each staff to avoid zigzag
+              const anchors: Record<string, [number, number]> = {
+                's1': [13.09, 80.28], // North Cluster
+                's2': [13.06, 80.26], // Central Cluster
+                's3': [13.04, 80.25], // West Cluster
+                's4': [13.02, 80.27], // South Cluster
+              };
+
+              const allStops = boardAssignments.flatMap(b => b.stops.map((s, idx) => {
+                const anchor = anchors[b.staff_id] || [13.08, 80.27];
+                return {
+                  stop_id: s.stop_id,
+                  staff_id: b.staff_id,
+                  // Small spread (0.015) around anchor to create tight clusters
+                  lat: anchor[0] + (Math.random() - 0.5) * 0.015,
+                  lng: anchor[1] + (Math.random() - 0.5) * 0.015,
+                  label: s.shop_name,
+                  status: 'PENDING' as const,
+                  area: b.staff_id === 's1' ? "North" : b.staff_id === 's2' ? "Central" : "South"
+                };
+              }));
+
+              const total65 = allStops.slice(0, 65);
+              return total65.map((s, idx) => ({
+                ...s,
+                status: idx < 45 ? 'DELIVERED' as const : 'PENDING' as const
+              }));
+            })()}
+            onSelectStaff={() => { }}
+            onSelectStop={setSelectedStopId}
+          />
+        </div>
       )}
 
       {/* Decision Journal Drawer */}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle, Edit3, XCircle, HelpCircle, ChevronDown, ChevronUp, Sparkles, AlertTriangle, Package, Zap } from 'lucide-react';
 import type { DraftCard as DraftCardType } from '../../store/types';
-import { useDraftStore } from '../../store';
+import { useDraftStore, useUserStore } from '../../store';
 import StatusBadge from './StatusBadge';
 import ReasonTagModal from './ReasonTagModal';
 import ConfirmModal from './ConfirmModal';
@@ -20,6 +20,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
     const [showAllTags, setShowAllTags] = useState(false);
     const [isExpanded, setIsExpanded] = useState(draft.status !== 'EXECUTED');
     const { updateDraftStatus } = useDraftStore();
+    const { currentUser } = useUserStore();
 
     // Auto-collapse on execution
     useEffect(() => {
@@ -29,13 +30,13 @@ const DraftCard = ({ draft, compact = false }: Props) => {
     }, [draft.status]);
 
     const handleApprove = (reason: string) => {
-        updateDraftStatus(draft.id, 'APPROVED', reason);
+        updateDraftStatus(draft.id, 'APPROVED', currentUser.name, reason);
         toast.success(`Draft "${draft.title}" approved: ${reason}`);
         setShowConfirmApprove(false);
     };
 
     const handleReject = (reason: string) => {
-        updateDraftStatus(draft.id, 'REJECTED', reason);
+        updateDraftStatus(draft.id, 'REJECTED', currentUser.name, reason);
         toast.error(`Draft "${draft.title}" rejected: ${reason}`);
         setShowRejectModal(false);
     };
@@ -161,31 +162,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                 <span className="text-sm font-bold text-purple-600">{draft.confidence}%</span>
             </div>
 
-            {/* Inventory Shortage Mitigation (Spec 6.2) */}
-            {draft.shortages && draft.shortages.length > 0 && (
-                <div className="mb-4 rounded-xl border border-red-100 bg-red-50 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Package className="h-4 w-4 text-red-500" />
-                        <p className="text-xs font-bold text-red-900 uppercase tracking-tight">Inventory Shortage Detected</p>
-                    </div>
-                    <div className="space-y-2 mb-4">
-                        {draft.shortages.map(s => (
-                            <div key={s.skuName} className="flex justify-between items-center text-xs">
-                                <span className="text-red-700 font-medium">{s.skuName}</span>
-                                <span className="text-red-900 font-bold">-{s.missing} units</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button className="flex-1 rounded-lg bg-white border border-red-100 py-2 text-[10px] font-bold text-red-600 hover:bg-red-50 transition-colors">
-                            REDUCE QUANTITIES
-                        </button>
-                        <button className="flex-1 rounded-lg bg-white border border-red-100 py-2 text-[10px] font-bold text-red-600 hover:bg-red-50 transition-colors">
-                            SKIP LOW-PRIORITY
-                        </button>
-                    </div>
-                </div>
-            )}
+
 
             {/* Add Staff Onboarding Form */}
             {draft.type === 'ADD_STAFF' && (

@@ -39,6 +39,7 @@ const App = () => (
           <Route element={<AppLayout><Staff /></AppLayout>} path="/staff" />
           <Route element={<AppLayout><Insights /></AppLayout>} path="/insights" />
           <Route element={<AppLayout><SettingsPage /></AppLayout>} path="/settings" />
+          <Route element={<AppLayout><SettingsPage /></AppLayout>} path="/settings/users" />
 
           {/* Staff Routes */}
           <Route element={<AppLayout><StaffRoute /></AppLayout>} path="/route" />

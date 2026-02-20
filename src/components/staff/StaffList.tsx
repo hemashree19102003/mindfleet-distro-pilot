@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { Users, Phone, Truck, MapPin } from "lucide-react";
+import { Users, Phone } from "lucide-react";
 import { Staff, DispatchPlan } from "@/store/types";
 import StatusBadge from "@/components/shared/StatusBadge";
 
@@ -65,8 +65,8 @@ const StaffList = ({ staff, selectedStaffId, onSelect, plan }: Props) => {
                             <div
                                 onClick={() => onSelect(s.id)}
                                 className={`rounded-xl border p-4 cursor-pointer transition-all hover:shadow-md h-full ${selectedStaffId === s.id
-                                        ? 'border-purple-400 bg-purple-50 shadow-sm'
-                                        : 'border-gray-100 bg-white hover:border-purple-200'
+                                    ? 'border-purple-400 bg-purple-50 shadow-sm'
+                                    : 'border-gray-100 bg-white hover:border-purple-200'
                                     }`}
                             >
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 h-full">
@@ -92,8 +92,6 @@ const StaffList = ({ staff, selectedStaffId, onSelect, plan }: Props) => {
                                         </div>
 
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 font-medium">
-                                            <span className="flex items-center gap-1"><Truck className="h-3 w-3 text-purple-400" />{s.vehicle}</span>
-                                            <span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-purple-400" />{s.zone}</span>
                                             <span className="flex items-center gap-1"><Phone className="h-3 w-3 text-purple-400" />{s.phone}</span>
                                         </div>
 

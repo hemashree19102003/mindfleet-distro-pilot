@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Save, Truck, Package } from "lucide-react";
+import { X, Save, Package } from "lucide-react";
 import { Staff } from "@/store/types";
 import { toast } from "sonner";
 import { useDraftStore, useUserStore } from "@/store";
@@ -10,18 +10,15 @@ interface Props {
     onClose: () => void;
 }
 
-const VEHICLES = ['Bike', 'Auto', 'Mini-Van', 'Tempo'] as const;
-
 const CapacityEditor = ({ staff, onClose }: Props) => {
     const [capacity, setCapacity] = useState(staff.capacity);
-    const [vehicle, setVehicle] = useState(staff.vehicle);
     const { addDraft } = useDraftStore();
     const { currentUser } = useUserStore();
 
     const handleSave = () => {
         const draft = createDraftFromAI('STAFF_UPDATE', currentUser.name);
-        draft.description = `Update ${staff.name}: Capacity ${staff.capacity} -> ${capacity}, Vehicle ${staff.vehicle} -> ${vehicle}`;
-        draft.payload = { staffId: staff.id, capacity, vehicle };
+        draft.description = `Update ${staff.name}: Capacity ${staff.capacity} -> ${capacity}`;
+        draft.payload = { staffId: staff.id, capacity };
 
         addDraft(draft);
         toast.success("Staff update draft created");
@@ -46,27 +43,6 @@ const CapacityEditor = ({ staff, onClose }: Props) => {
                 </div>
 
                 <div className="space-y-6">
-                    {/* Vehicle Selection */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide flex items-center gap-1">
-                            <Truck className="h-3 w-3" /> Vehicle Type
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                            {VEHICLES.map(v => (
-                                <button
-                                    key={v}
-                                    onClick={() => setVehicle(v)}
-                                    className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all ${vehicle === v
-                                            ? 'border-purple-600 bg-purple-50 text-purple-700 shadow-sm'
-                                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {v}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     {/* Capacity Slider */}
                     <div>
                         <div className="flex justify-between items-center mb-2">

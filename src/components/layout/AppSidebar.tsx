@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Sparkles, LayoutDashboard, Truck, Package, Store,
   Boxes, FileText, Users, BarChart3, Settings, X,
-  MapPin, List, User
+  MapPin, List, User, Shield
 } from "lucide-react";
 import { useUserStore } from "@/store";
 

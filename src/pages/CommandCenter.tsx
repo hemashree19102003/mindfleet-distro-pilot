@@ -4,7 +4,6 @@ import ChatThread from "@/components/command-center/ChatThread";
 import ChatInput from "@/components/command-center/ChatInput";
 import ContextPanel from "@/components/command-center/ContextPanel";
 import { Sparkles } from "lucide-react";
-import { toast } from "sonner";
 
 // Global UI event logging helper
 const ui_event = (name: string, payload: any) => {

@@ -1,14 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Building2, Clock, MapPin, Users,
   Save, ChevronDown, Bell, Globe, Package,
-  Shield, AlertTriangle, CheckCircle2, Info
+  Shield, AlertTriangle, CheckCircle2, Info,
+  Sparkles, ChevronUp
 } from "lucide-react";
 import { useUserStore } from "@/store";
 import { toast } from "sonner";
+import {
+  UsersOverview,
+  InviteUserForm,
+  OnboardedStaffTable
+} from "@/components/settings/users";
 
 // ─── Types ───────────────────────────────────────────────────────
-type SettingsTab = 'business' | 'notifications' | 'account';
+type SettingsTab = 'business' | 'notifications' | 'account' | 'users';
+
+// ─── Mock Data ──────────────────────────────────────────────────
+
+
+const MOCK_STATS = {
+  total: 12,
+  active: 8,
+  pending: 3,
+  disabled: 1
+};
 
 // ─── Section Component ──────────────────────────────────────────
 function Section({ title, subtitle, icon: Icon, children }: {
@@ -20,7 +37,7 @@ function Section({ title, subtitle, icon: Icon, children }: {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
+        <div className="h-9 w-9 rounded-xl bg-purple-600 flex items-center justify-center flex-shrink-0">
           <Icon className="h-4 w-4 text-white" />
         </div>
         <div>
@@ -110,7 +127,15 @@ function Input({ value, onChange, placeholder, type = "text", disabled = false }
 // ─── Main Component ─────────────────────────────────────────────
 const SettingsPage = () => {
   const { currentUser } = useUserStore();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<SettingsTab>('business');
+
+  // Sync tab with route
+  useEffect(() => {
+    if (location.pathname === '/settings/users') {
+      setActiveTab('users');
+    }
+  }, [location.pathname]);
 
   // ─── Local state for form fields ──────────────────────────────
   const [businessName, setBusinessName] = useState("MindFleet Distribution");
@@ -151,11 +176,14 @@ const SettingsPage = () => {
     });
   };
 
-  const tabs: { id: SettingsTab; label: string; icon: any }[] = [
+  const tabs: { id: SettingsTab; label: string; icon: any; adminOnly?: boolean }[] = [
     { id: 'business', label: 'Business', icon: Building2 },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'account', label: 'Account & Security', icon: Shield },
+    { id: 'users', label: 'Users & Access', icon: Users, adminOnly: true },
   ];
+
+  const filteredTabs = tabs.filter(t => !t.adminOnly || currentUser.role === 'ADMIN');
 
   return (
     <div className="max-w-4xl mx-auto pb-20 animate-fade-in">
@@ -181,12 +209,12 @@ const SettingsPage = () => {
 
       {/* ─── Tabs ────────────────────────────────────────────── */}
       <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1">
-        {tabs.map(tab => (
+        {filteredTabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all flex-1 justify-center ${activeTab === tab.id
-              ? 'bg-white text-gray-900 shadow-sm'
+              ? 'bg-white text-purple-600 shadow-sm'
               : 'text-gray-500 hover:text-gray-700'
               }`}
           >
@@ -356,11 +384,11 @@ const SettingsPage = () => {
             </Section>
 
             {/* Info Card */}
-            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 flex items-start gap-4">
-              <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-5 flex items-start gap-4">
+              <Info className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-blue-900">Data & Compliance</p>
-                <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                <p className="text-sm font-semibold text-purple-900">Data & Compliance</p>
+                <p className="text-xs text-purple-700 mt-1 leading-relaxed">
                   All delivery records, GPS traces, and payment data are encrypted at rest (AES-256) and in transit (TLS 1.3).
                   Data is stored in India-region servers compliant with IT Act 2000 and DPDP Act 2023.
                   Contact your administrator for data export or deletion requests.
@@ -368,6 +396,15 @@ const SettingsPage = () => {
               </div>
             </div>
           </>
+        )}
+
+        {/* ════════════════ USERS & ACCESS TAB ════════════════ */}
+        {activeTab === 'users' && currentUser.role === 'ADMIN' && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <UsersOverview stats={MOCK_STATS} />
+            <InviteUserForm />
+            <OnboardedStaffTable />
+          </div>
         )}
       </div>
 

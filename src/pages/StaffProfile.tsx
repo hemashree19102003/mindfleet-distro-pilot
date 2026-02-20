@@ -1,5 +1,5 @@
 import {
-    User, Phone, Truck, Shield, Bell,
+    User, Phone, Shield, Bell,
     HelpCircle, LogOut, Moon, Globe, ChevronRight,
     BadgeCheck, Settings
 } from "lucide-react";
@@ -31,19 +31,18 @@ const StaffProfile = () => {
                     </div>
                 </div>
                 <h2 className="mt-4 text-xl font-black text-gray-900">{currentUser.name}</h2>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{myStaff.vehicle} · {myStaff.zone}</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Authorized Distribution Partner</p>
             </div>
 
             {/* Info List */}
             <div className="space-y-2">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">IDENTITY & ASSETS</h3>
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">IDENTITY & STATUS</h3>
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                     {[
                         { icon: Phone, label: "Phone Number", value: myStaff.phone },
-                        { icon: Truck, label: "Assigned Vehicle", value: myStaff.vehicle },
                         { icon: Shield, label: "Shift Status", value: "Active (On-Duty)", active: true },
-                    ].map((item, i) => (
-                        <div key={item.label} className={`flex items-center justify-between p-4 ${i !== 2 ? 'border-b border-gray-50' : ''}`}>
+                    ].map((item, i, arr) => (
+                        <div key={item.label} className={`flex items-center justify-between p-4 ${i !== arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
                             <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
                                     <item.icon className="h-4 w-4" />

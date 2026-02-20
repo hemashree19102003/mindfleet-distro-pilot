@@ -25,9 +25,7 @@ const Staff = () => {
 
   const filtered = useMemo(() => {
     return staff.filter(s => {
-      const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.zone.toLowerCase().includes(search.toLowerCase()) ||
-        s.vehicle.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = s.name.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === "all" || s.status === statusFilter;
       return matchSearch && matchStatus;
     });
@@ -93,7 +91,7 @@ const Staff = () => {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search staff, zone, vehicle…"
+            placeholder="Search staff by name…"
             className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
           />
         </div>
@@ -150,8 +148,6 @@ const Staff = () => {
 
             <div className="space-y-2">
               {[
-                { label: "Zone", value: selectedStaffData.zone },
-                { label: "Vehicle", value: selectedStaffData.vehicle },
                 { label: "Phone", value: selectedStaffData.phone },
                 { label: "Capacity", value: `${selectedStaffData.capacity} stops` },
                 { label: "Distance", value: selectedStaffData.distance },
@@ -188,7 +184,7 @@ const Staff = () => {
               onClick={() => setIsCapacityEditorOpen(true)}
               className="w-full rounded-xl border border-purple-200 bg-white py-2 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
             >
-              Edit Capacity / Vehicle
+              Edit Capacity
             </button>
           </div>
         ) : (

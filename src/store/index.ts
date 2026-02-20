@@ -46,15 +46,34 @@ export const useUserStore = create<UserStore>(() => ({
 }));
 
 // ─── Staff Store ──────────────────────────────────────────────────────────────
+export interface OnboardedStaff {
+    id: string;
+    name: string;
+    contact: string;
+    onboardingDate: string;
+    status: "Completed" | "In Training" | "Background Check";
+}
+
 interface StaffStore {
     staff: Staff[];
+    onboardingStaff: OnboardedStaff[];
     updateStaff: (id: string, updates: Partial<Staff>) => void;
+    addOnboardingStaff: (staff: OnboardedStaff) => void;
 }
+
+const INITIAL_ONBOARDING: OnboardedStaff[] = [
+    { id: 'ob1', name: 'Rajesh Kumar', contact: '+91 98765 43210', onboardingDate: '2026-02-15', status: 'Completed' },
+    { id: 'ob2', name: 'Sita Ram', contact: '+91 87654 32109', onboardingDate: '2026-02-18', status: 'In Training' },
+    { id: 'ob3', name: 'Amit Singh', contact: '+91 76543 21098', onboardingDate: '2026-02-20', status: 'Background Check' },
+];
 
 export const useStaffStore = create<StaffStore>((set) => ({
     staff: STAFF_LIST,
+    onboardingStaff: INITIAL_ONBOARDING,
     updateStaff: (id, updates) =>
         set(s => ({ staff: s.staff.map(st => st.id === id ? { ...st, ...updates } : st) })),
+    addOnboardingStaff: (staff) =>
+        set(s => ({ onboardingStaff: [staff, ...s.onboardingStaff] })),
 }));
 
 // ─── Shop Store ───────────────────────────────────────────────────────────────
@@ -216,6 +235,7 @@ export const useChatStore = create<ChatStore>((set) => ({
             role: 'user',
             content,
             timestamp: new Date().toISOString(),
+            created_at: new Date().toISOString(),
         };
         set(s => ({ messages: [...s.messages, userMsg], isTyping: true }));
 
@@ -234,6 +254,7 @@ export const useChatStore = create<ChatStore>((set) => ({
                 role: 'ai',
                 content: aiResp.content,
                 timestamp: new Date().toISOString(),
+                created_at: new Date().toISOString(),
                 draftId,
             };
             set(s => ({ messages: [...s.messages, aiMsg], isTyping: false }));

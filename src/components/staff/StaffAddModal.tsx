@@ -1,25 +1,24 @@
 import { useState } from "react";
-import { X, UserPlus, Phone, MapPin, Truck, Sparkles } from "lucide-react";
+import { X, UserPlus, Phone, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { useDraftStore, useUserStore } from "@/store";
+import { useDraftStore, useUserStore, useStaffStore } from "@/store";
 import { createDraftFromAI } from "@/data/generators";
 
 interface Props {
     onClose: () => void;
 }
 
-const ZONES = ['Zone A (Anna Nagar)', 'Zone B (Adyar)', 'Zone C (T. Nagar)', 'Zone D (Velachery)', 'Zone E (Mylapore)'];
-const VEHICLES = ['Bike', 'Auto', 'Mini-Van', 'Tempo'] as const;
+const PHASES = ['Completed', 'In Training', 'Background Check'] as const;
 
 const StaffAddModal = ({ onClose }: Props) => {
     const { addDraft } = useDraftStore();
     const { currentUser } = useUserStore();
+    const { addOnboardingStaff } = useStaffStore();
 
     const [form, setForm] = useState({
         name: '',
         phone: '',
-        zone: ZONES[0],
-        vehicle: VEHICLES[0],
+        status: PHASES[2] as typeof PHASES[number]
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -33,10 +32,19 @@ const StaffAddModal = ({ onClose }: Props) => {
         // Create the draft for internal decision tracking
         const draft = createDraftFromAI('ADD_STAFF', currentUser.name);
         draft.title = `Onboard: ${form.name}`;
-        draft.description = `Pending onboarding for ${form.name} (${form.vehicle}) in ${form.zone}`;
+        draft.description = `Pending onboarding for ${form.name} - Phase: ${form.status}`;
         draft.payload = { ...form };
 
         addDraft(draft);
+
+        // Add to onboarding list for settings
+        addOnboardingStaff({
+            id: `ob_${Date.now()}`,
+            name: form.name,
+            contact: form.phone,
+            onboardingDate: new Date().toISOString().split('T')[0],
+            status: form.status
+        });
 
         toast.success(`Onboarding draft created for ${form.name}`, {
             description: "Approve in Decision Journal to commit to fleet"
@@ -103,34 +111,18 @@ const StaffAddModal = ({ onClose }: Props) => {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Zone */}
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
-                                <MapPin className="h-3 w-3 text-purple-500" /> Zone
-                            </label>
-                            <select
-                                value={form.zone}
-                                onChange={e => setForm({ ...form, zone: e.target.value })}
-                                className="w-full rounded-2xl border border-gray-100 bg-gray-50/50 px-4 py-3 text-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-500/5 outline-none transition-all bg-white cursor-pointer"
-                            >
-                                {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-                            </select>
-                        </div>
-
-                        {/* Vehicle */}
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
-                                <Truck className="h-3 w-3 text-purple-500" /> Vehicle
-                            </label>
-                            <select
-                                value={form.vehicle}
-                                onChange={e => setForm({ ...form, vehicle: e.target.value as any })}
-                                className="w-full rounded-2xl border border-gray-100 bg-gray-50/50 px-4 py-3 text-sm focus:border-purple-500 focus:ring-4 focus:ring-purple-500/5 outline-none transition-all bg-white cursor-pointer"
-                            >
-                                {VEHICLES.map(v => <option key={v} value={v}>{v}</option>)}
-                            </select>
-                        </div>
+                    {/* Status Scenario Selector */}
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                            <Sparkles className="h-3 w-3 text-purple-500" /> Onboarding Phase
+                        </label>
+                        <select
+                            value={form.status}
+                            onChange={e => setForm({ ...form, status: e.target.value as any })}
+                            className="w-full rounded-2xl border border-gray-100 bg-purple-50/50 px-4 py-3 text-sm font-bold text-purple-700 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/5 outline-none transition-all cursor-pointer"
+                        >
+                            {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
                     </div>
 
                     <div className="flex gap-3 pt-4">
