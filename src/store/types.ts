@@ -328,6 +328,7 @@ export interface ChatMessage {
 
 // ─── System Settings ──────────────────────────────────────────────────────────
 export type LLMProvider = 'GPT' | 'CLAUDE' | 'AUTO';
+export type Language = 'en' | 'ta' | 'hi';
 
 export interface SystemSettings {
   llmProvider: LLMProvider;
@@ -339,4 +340,5 @@ export interface SystemSettings {
     credit: number;
   };
   temperature: number;
+  language: Language;
 }

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { AlertTriangle, Package, Plus, Minus, TrendingUp, Clock, History, LayoutGrid, List, FileDown } from "lucide-react";
+import { AlertTriangle, Package, Plus, TrendingUp, Clock, LayoutGrid, List, FileDown } from "lucide-react";
 import { useInventoryStore, useDraftStore, useUserStore } from "@/store";
 import StatusBadge from "@/components/shared/StatusBadge";
 import FilterBar from "@/components/shared/FilterBar";
@@ -7,6 +7,7 @@ import RiskBanner from "@/components/shared/RiskBanner";
 import { VirtualizedTable } from "@/components/shared/VirtualizedTable";
 import { toast } from "sonner";
 import { createDraftFromAI } from "@/data/generators";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import BatchForm from "@/components/inventory/BatchForm";
 import StockAdjustModal from "@/components/inventory/StockAdjustModal";
@@ -16,6 +17,7 @@ const Inventory = () => {
   const { skus: allSkus } = useInventoryStore();
   const { addDraft } = useDraftStore();
   const { currentUser } = useUserStore();
+  const { t } = useTranslation();
 
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -42,14 +44,14 @@ const Inventory = () => {
     if (!selectedSku) return;
     const draft = createDraftFromAI('INVENTORY_ADJUSTMENT', currentUser.name);
     draft.payload = { skuId: selectedSku.id, delta: adjustment, reason, note };
-    draft.description = `${adjustment > 0 ? 'Add' : 'Remove'} ${Math.abs(adjustment)} units of ${selectedSku.name}`;
+    draft.description = `${adjustment > 0 ? t('add') : t('remove')} ${Math.abs(adjustment)} ${t('units')} of ${selectedSku.name}`;
     addDraft(draft);
-    toast.success(`Draft adjustment created: ${reason}`);
+    toast.success(`${t('draftAdjustmentCreated')}: ${reason}`);
     setIsAdjustModalOpen(false);
   };
 
   const handleCreateBatch = (batchPayload: any) => {
-    toast.success(`Batch draft created: ${batchPayload.quantity} units for SKU ${selectedSkuId || batchPayload.skuId}`);
+    toast.success(`${t('batchDraftCreated')}: ${batchPayload.quantity} units`);
     setIsBatchModalOpen(false);
   };
 
@@ -60,7 +62,7 @@ const Inventory = () => {
           onClick={() => setSelectedSkuId(null)}
           className="flex items-center gap-1.5 text-xs font-black text-purple-600 uppercase tracking-widest hover:translate-x-[-4px] transition-all"
         >
-          ← Back to Inventory
+          ← {t('backToInventory')}
         </button>
 
         <div className="flex items-center justify-between">
@@ -71,9 +73,9 @@ const Inventory = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-3xl font-black text-gray-900 tracking-tight">{selectedSku.name}</h1>
-                <StatusBadge status={selectedSku.lowStock ? 'Low Stock' : 'In Stock'} />
+                <StatusBadge status={selectedSku.lowStock ? t('lowStockLabel') : t('inStock')} />
               </div>
-              <p className="text-sm font-medium text-gray-400">Category: {selectedSku.category} · System ID: {selectedSku.id.split('-')[1]}</p>
+              <p className="text-sm font-medium text-gray-400">{t('category')}: {selectedSku.category} · {t('systemId')}: {selectedSku.id.split('-')[1]}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -81,7 +83,7 @@ const Inventory = () => {
               onClick={() => setIsAdjustModalOpen(true)}
               className="h-11 rounded-xl bg-purple-600 px-6 text-xs font-bold text-white shadow-lg shadow-purple-200 active:scale-95 transition-all flex items-center gap-2"
             >
-              <Plus className="h-4 w-4" /> ADJUST STOCK
+              <Plus className="h-4 w-4" /> {t('adjustStock')}
             </button>
           </div>
         </div>
@@ -89,17 +91,17 @@ const Inventory = () => {
         {selectedSku.lowStock && (
           <RiskBanner
             severity="destructive"
-            title="Stock Below Threshold"
-            description={`Current inventory (${selectedSku.available}) is below the safety threshold of ${selectedSku.threshold}. Expected stockout in 2.5 days.`}
-            actionLabel="ORDER FROM VENDOR"
+            title={t('stockBelowThreshold')}
+            description={`${t('expectedStockout')} 2.5 ${t('days')}.`}
+            actionLabel={t('orderFromVendor')}
           />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <SummaryStat label="AVAILABLE" value={String(selectedSku.available)} icon={Package} />
-          <SummaryStat label="THRESHOLD" value={String(selectedSku.threshold)} icon={AlertTriangle} />
-          <SummaryStat label="AVG DAILY" value={String(selectedSku.avgDaily)} unit="u/day" icon={TrendingUp} />
-          <SummaryStat label="RUNWAY" value={String(Math.floor(selectedSku.available / selectedSku.avgDaily))} unit="days" icon={Clock} />
+          <SummaryStat label={t('available')} value={String(selectedSku.available)} icon={Package} />
+          <SummaryStat label={t('threshold')} value={String(selectedSku.threshold)} icon={AlertTriangle} />
+          <SummaryStat label={t('avgDaily')} value={String(selectedSku.avgDaily)} unit={`u/${t('days').slice(0, 3)}`} icon={TrendingUp} />
+          <SummaryStat label={t('runway')} value={String(Math.floor(selectedSku.available / selectedSku.avgDaily))} unit={t('days')} icon={Clock} />
         </div>
 
         <InventoryLedger batches={selectedSku.batches} />
@@ -119,18 +121,18 @@ const Inventory = () => {
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Inventory Control</h1>
-          <p className="text-sm text-gray-500">Manage {skus.length} Dairy SKUs and batch logistics</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('inventoryControl')}</h1>
+          <p className="text-sm text-gray-500">{t('manageSkuLogistics')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsBatchModalOpen(true)}
             className="flex h-10 items-center gap-2 rounded-xl border border-purple-100 bg-white px-4 text-xs font-bold text-purple-600 hover:bg-purple-50 transition-all active:scale-95"
           >
-            <Plus className="h-4 w-4" /> ADD BATCH
+            <Plus className="h-4 w-4" /> {t('addBatch')}
           </button>
           <button className="flex h-10 items-center gap-2 rounded-xl purple-gradient px-4 text-xs font-bold text-white shadow-lg active:scale-95 transition-all">
-            <FileDown className="h-4 w-4" /> RECONCILE
+            <FileDown className="h-4 w-4" /> {t('reconcile')}
           </button>
         </div>
       </div>
@@ -145,14 +147,14 @@ const Inventory = () => {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <FilterBar
-          searchPlaceholder="Filter SKUs..."
+          searchPlaceholder={t('filterSkus')}
           onSearch={setSearch}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
           options={[
-            { id: 'all', label: 'All Items', count: skus.length },
-            { id: 'low', label: 'Low Stock', count: skus.filter(s => s.lowStock).length },
-            { id: 'ok', label: 'Healthy', count: skus.filter(s => !s.lowStock).length },
+            { id: 'all', label: t('allItems'), count: skus.length },
+            { id: 'low', label: t('lowStockLabel'), count: skus.filter(s => s.lowStock).length },
+            { id: 'ok', label: t('healthy'), count: skus.filter(s => !s.lowStock).length },
           ]}
         />
 
@@ -192,7 +194,7 @@ const Inventory = () => {
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">{sku.category}</p>
 
               <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">STOCK LEVEL</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('stockLevel')}</span>
                 <span className={`text-xs font-black ${sku.lowStock ? 'text-red-500' : 'text-gray-900'}`}>{sku.available} / {sku.threshold * 2}</span>
               </div>
 
@@ -213,13 +215,13 @@ const Inventory = () => {
             rowHeight={64}
             header={
               <div className="flex items-center px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 border-b border-gray-100">
-                <div className="w-16">Status</div>
-                <div className="w-20">SKU ID</div>
-                <div className="flex-1">Product Name</div>
-                <div className="w-32">Category</div>
-                <div className="w-32 text-right">Available</div>
-                <div className="w-32 text-right">Threshold</div>
-                <div className="w-24 text-right pr-4">Action</div>
+                <div className="w-16">{t('statusLabel')}</div>
+                <div className="w-20">{t('skuIdLabel')}</div>
+                <div className="flex-1">{t('productName')}</div>
+                <div className="w-32">{t('category')}</div>
+                <div className="w-32 text-right">{t('available')}</div>
+                <div className="w-32 text-right">{t('threshold')}</div>
+                <div className="w-24 text-right pr-4">{t('action')}</div>
               </div>
             }
             renderRow={(sku) => (
@@ -228,18 +230,18 @@ const Inventory = () => {
                 className="flex items-center px-6 h-full border-b border-gray-50 hover:bg-purple-50/30 transition-colors cursor-pointer group"
               >
                 <div className="w-16">
-                  <StatusBadge status={sku.lowStock ? 'Low Stock' : 'In Stock'} size="sm" />
+                  <StatusBadge status={sku.lowStock ? t('lowStockLabel') : t('inStock')} size="sm" />
                 </div>
                 <div className="w-20 font-mono text-[10px] text-gray-400">{sku.id.split('-')[1]}</div>
                 <div className="flex-1 font-bold text-sm text-gray-900 group-hover:text-purple-600 transition-colors">{sku.name}</div>
                 <div className="w-32 text-xs text-gray-500">{sku.category}</div>
                 <div className={`w-32 text-right font-black text-sm ${sku.lowStock ? 'text-red-500' : 'text-gray-900'}`}>
-                  {sku.available} <span className="text-[9px] text-gray-400 font-normal">units</span>
+                  {sku.available} <span className="text-[9px] text-gray-400 font-normal">{t('units')}</span>
                 </div>
                 <div className="w-32 text-right text-xs text-gray-400">{sku.threshold}</div>
                 <div className="w-24 text-right pr-4">
                   <button className="text-[10px] font-bold text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest hover:underline">
-                    VIEW
+                    {t('view')}
                   </button>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import ChatThread from "@/components/command-center/ChatThread";
 import ChatInput from "@/components/command-center/ChatInput";
 import ContextPanel from "@/components/command-center/ContextPanel";
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Global UI event logging helper
 const ui_event = (name: string, payload: any) => {
@@ -17,6 +18,7 @@ const CommandCenter = () => {
   const { messages, isTyping, sendMessage } = useChatStore();
   const { drafts, updateDraftStatus } = useDraftStore();
   const { currentUser } = useUserStore();
+  const { t } = useTranslation();
 
   const handleSendMessage = (text: string, attachments?: File[]) => {
     ui_event("SEND_MESSAGE", { user_id: currentUser.id, role: currentUser.role, text });
@@ -38,12 +40,12 @@ const CommandCenter = () => {
             <Sparkles className="h-4 w-4 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-xs font-bold text-gray-900">Command Center</h2>
-            <p className="text-[10px] text-gray-500">AI-assisted operational control</p>
+            <h2 className="text-xs font-bold text-gray-900">{t('commandCenter')}</h2>
+            <p className="text-[10px] text-gray-500">{t('aiAssistedControl')}</p>
           </div>
           <span className="ml-auto flex items-center gap-1.5 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
             <span className="h-1.5 w-1.5 rounded-full bg-purple-600 animate-pulse-soft" />
-            AI Active
+            {t('aiActive')}
           </span>
         </div>
 

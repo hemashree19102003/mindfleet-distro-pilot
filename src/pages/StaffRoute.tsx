@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { SHOPS_LIST } from "@/data/shops_data";
 import DeliveryPaymentScreen, { MOCK_ORDER_ITEMS } from "@/components/staff/DeliveryPaymentScreen";
 import React from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Lazy load the map component
 const LiveNavMap = lazy(() => import("@/components/staff/LiveNavMap"));
@@ -17,20 +18,22 @@ type DeliveryMode = 'ROUTE' | 'ARRIVAL' | 'DELIVERY' | 'FAIL' | 'COMPLETED';
 
 // ─── Map Fallbacks ───────────────────────────────────────────────
 function MapErrorFallback() {
+    const { t } = useTranslation();
     return (
         <div className="w-full h-full rounded-2xl bg-gray-100 border border-gray-200 flex flex-col items-center justify-center text-gray-400">
             <MapIcon className="h-12 w-12 opacity-30 mb-3" />
-            <p className="text-sm font-bold">Map loading failed</p>
-            <p className="text-xs">Check your internet connection</p>
+            <p className="text-sm font-bold">{t('mapLoadingFailed')}</p>
+            <p className="text-xs">{t('checkConnection')}</p>
         </div>
     );
 }
 
 function MapLoadingFallback() {
+    const { t } = useTranslation();
     return (
         <div className="w-full h-full rounded-2xl bg-gray-100 border border-gray-200 flex flex-col items-center justify-center text-gray-400">
             <Loader2 className="h-10 w-10 animate-spin text-purple-500 mb-3" />
-            <p className="text-sm font-bold">Loading map...</p>
+            <p className="text-sm font-bold">{t('loadingMap')}</p>
         </div>
     );
 }
@@ -62,6 +65,7 @@ const StaffRoute = () => {
     const { staff } = useStaffStore();
     const { plan } = useDispatchStore();
     const { shops } = useShopStore();
+    const { t } = useTranslation();
 
     // ─── State ──────────────────────────────────────────────────
     const [currentStopIndex, setCurrentStopIndex] = useState(0);
@@ -144,13 +148,13 @@ const StaffRoute = () => {
     const mapStops = useMemo(() => {
         return optimizedStops.map((s: any, i: number) => ({
             id: s.id || `stop_${i}`,
-            name: s.name || `Stop ${i + 1}`,
+            name: s.name || `${t('stopShort')} ${i + 1}`,
             lat: s.lat || s.geo?.lat || 13.08 + i * 0.01,
             lng: s.lng || s.geo?.lng || 80.25 + i * 0.01,
             address: s.address || s.area,
             status: (i < currentStopIndex ? 'done' : (i === currentStopIndex ? 'current' : 'pending')) as 'done' | 'current' | 'pending'
         }));
-    }, [optimizedStops, currentStopIndex]);
+    }, [optimizedStops, currentStopIndex, t]);
 
     const nextStopForMap = useMemo(() => {
         if (currentStopIndex >= optimizedStops.length) return null;
@@ -244,11 +248,11 @@ const StaffRoute = () => {
                 setDistance("0.05");
                 setEta("0");
                 setMode('ARRIVAL');
-                toast.info(`Arrived at ${currentStop.name}`);
+                toast.info(`${t('youHaveArrived')} ${currentStop.name}`);
             }, 8000);
             return () => clearTimeout(timer);
         }
-    }, [mode, currentStop]);
+    }, [mode, currentStop, t]);
 
     // ─── Actions ────────────────────────────────────────────────
     const advanceToNextStop = () => {
@@ -287,11 +291,11 @@ const StaffRoute = () => {
                 <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
                     <CheckCircle className="h-12 w-12 text-green-500" />
                 </div>
-                <h2 className="text-3xl font-black text-gray-900 mb-2">All Done! 🎉</h2>
-                <p className="text-gray-500 mt-2">Great job today. All stops completed.</p>
+                <h2 className="text-3xl font-black text-gray-900 mb-2">{t('allDone')}</h2>
+                <p className="text-gray-500 mt-2">{t('greatJob')}</p>
                 <div className="mt-8 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm w-full">
                     <div className="flex justify-between text-sm font-bold text-gray-600">
-                        <span>Stops Covered</span>
+                        <span>{t('stopsCovered')}</span>
                         <span className="text-green-600">{myStops.length}</span>
                     </div>
                 </div>
@@ -323,7 +327,7 @@ const StaffRoute = () => {
                     )}
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000]">
                         <div className="bg-green-600/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold tracking-wide shadow-lg">
-                            📍 Delivering — Stop {currentStopIndex + 1} of {myStops.length}
+                            📍 {t('deliveringStop')} {currentStopIndex + 1} {t('of')} {myStops.length}
                         </div>
                     </div>
                 </div>
@@ -340,6 +344,7 @@ const StaffRoute = () => {
                         currentGps={currentPos}
                         onComplete={handleDeliveryComplete}
                         onCancel={() => setMode('FAIL')}
+                        t={t}
                     />
                 </div>
             </div>
@@ -350,6 +355,7 @@ const StaffRoute = () => {
     if (mode === 'FAIL') {
         return (
             <div className="flex flex-col h-[calc(100vh-80px)] max-w-lg mx-auto relative overflow-hidden">
+                {/* Compact map strip */}
                 <div className="flex-shrink-0 relative" style={{ height: '25vh' }}>
                     {mapError ? <MapErrorFallback /> : (
                         <Suspense fallback={<MapLoadingFallback />}>
@@ -369,7 +375,7 @@ const StaffRoute = () => {
                     )}
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000]">
                         <div className="bg-red-600/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold tracking-wide shadow-lg">
-                            ❌ Delivery Failed — Stop {currentStopIndex + 1}
+                            ❌ {t('deliveryFailedStop')} {currentStopIndex + 1}
                         </div>
                     </div>
                 </div>
@@ -377,21 +383,27 @@ const StaffRoute = () => {
                 <div className="bg-white rounded-t-3xl shadow-2xl border-t border-gray-100 flex-1 overflow-y-auto px-5 py-5 -mt-4 relative z-10">
                     <div className="space-y-4 animate-in fade-in duration-300">
                         <div>
-                            <h2 className="text-xl font-black text-gray-900 mb-1">Delivery Failed</h2>
-                            <p className="text-xs text-gray-500">{currentStop.name} — Why could you not deliver?</p>
+                            <h2 className="text-xl font-black text-gray-900 mb-1">{t('deliveryFailedTitle')}</h2>
+                            <p className="text-xs text-gray-500">{currentStop.name} — {t('whyNotDeliver')}</p>
                         </div>
 
                         <div className="space-y-2">
-                            {['Shop Closed', 'Customer Unavailable', 'Payment Refused', 'Wrong Address', 'Other'].map(reason => (
+                            {([
+                                { key: 'shopClosed', label: t('shopClosed') },
+                                { key: 'customerUnavailable', label: t('customerUnavailable') },
+                                { key: 'paymentRefused', label: t('paymentRefused') },
+                                { key: 'wrongAddress', label: t('wrongAddress') },
+                                { key: 'other', label: t('other') }
+                            ]).map(reason => (
                                 <button
-                                    key={reason}
-                                    onClick={() => setFailReason(reason)}
-                                    className={`w-full p-4 rounded-xl text-left font-bold border transition-all text-sm ${failReason === reason
+                                    key={reason.key}
+                                    onClick={() => setFailReason(reason.label)}
+                                    className={`w-full p-4 rounded-xl text-left font-bold border transition-all text-sm ${failReason === reason.label
                                         ? 'border-red-500 bg-red-50 text-red-600 ring-2 ring-red-100'
                                         : 'border-gray-200 bg-white text-gray-600 hover:border-red-200'
                                         }`}
                                 >
-                                    {reason}
+                                    {reason.label}
                                 </button>
                             ))}
                         </div>
@@ -401,13 +413,13 @@ const StaffRoute = () => {
                                 onClick={() => setMode('DELIVERY')}
                                 className="flex-1 py-4 text-gray-500 font-bold text-sm rounded-2xl border border-gray-200 hover:bg-gray-50"
                             >
-                                Go Back
+                                {t('goBack')}
                             </button>
                             <button
                                 onClick={handleFail}
                                 className="flex-[2] py-4 bg-red-500 text-white rounded-2xl font-bold text-sm hover:bg-red-600 active:scale-95 transition-all"
                             >
-                                Confirm Failed
+                                {t('confirmFailed')}
                             </button>
                         </div>
                     </div>
@@ -447,7 +459,7 @@ const StaffRoute = () => {
                 {/* Stop progress badge */}
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000]">
                     <div className="bg-gray-900/80 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold tracking-wide shadow-lg">
-                        Stop {currentStopIndex + 1} of {myStops.length}
+                        {t('stopShort')} {currentStopIndex + 1} {t('of')} {myStops.length}
                     </div>
                 </div>
             </div>
@@ -474,30 +486,30 @@ const StaffRoute = () => {
                         <div className="space-y-4 animate-in fade-in duration-300">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">NEXT STOP</p>
+                                    <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">{t('nextStop')}</p>
                                     <h1 className="text-2xl font-black text-gray-900 leading-tight">{currentStop.name}</h1>
                                     <p className="text-xs text-gray-500">{currentStop.address || currentStop.area}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-2xl font-black text-gray-900">{distance}<span className="text-xs text-gray-400 ml-1">km</span></p>
-                                    <p className="text-sm font-bold text-green-600">{eta} min</p>
+                                    <p className="text-2xl font-black text-gray-900">{distance}<span className="text-xs text-gray-400 ml-1">{t('km')}</span></p>
+                                    <p className="text-sm font-bold text-green-600">{eta} {t('min')}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                                     <p className="text-2xl font-black text-gray-900">{totalItems}</p>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Items</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{t('items')}</p>
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                                     <p className="text-2xl font-black text-gray-900">₹{(expectedAmount / 1000).toFixed(1)}k</p>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Collect</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{t('collect')}</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-center gap-2 text-blue-600 animate-pulse">
                                 <Navigation className="h-3.5 w-3.5" />
-                                <span className="text-xs font-bold">Navigating to destination...</span>
+                                <span className="text-xs font-bold">{t('navigatingTo')}</span>
                             </div>
                         </div>
                     )}
@@ -509,20 +521,20 @@ const StaffRoute = () => {
                                 <MapPin className="h-8 w-8 text-green-600" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-black text-gray-900">You have arrived!</h1>
+                                <h1 className="text-2xl font-black text-gray-900">{t('youHaveArrived')}</h1>
                                 <p className="text-sm font-medium text-gray-500">{currentStop.name}</p>
                             </div>
                             <button
                                 onClick={() => { setMode('DELIVERY'); setPanelExpanded(true); }}
                                 className="w-full py-4 bg-gray-900 text-white rounded-2xl text-lg font-bold shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                             >
-                                ✅ Arrived — Start Delivery
+                                ✅ {t('arrivedStartDelivery')}
                             </button>
                             <button
                                 onClick={() => setMode('ROUTE')}
                                 className="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-gray-600"
                             >
-                                Navigate Again
+                                {t('navigateAgain')}
                             </button>
                         </div>
                     )}

@@ -1,6 +1,7 @@
 import { GripVertical, MapPin, AlertTriangle } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { Staff, Shop } from "@/store/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface StopCardData {
     stop_id: string;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 const AssignmentBoard = ({ assignments, onMoveStop, onRebalance }: Props) => {
+    const { t } = useTranslation();
     return (
         <div className="flex gap-4 overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide">
             {assignments.map((assign) => (
@@ -45,11 +47,11 @@ const AssignmentBoard = ({ assignments, onMoveStop, onRebalance }: Props) => {
                         </div>
                         <div className="flex gap-4">
                             <div>
-                                <p className="text-[10px] text-gray-400 font-bold">EST. DISTANCE</p>
-                                <p className="text-xs font-black text-gray-900">{assign.metrics.distance_est_km || 0} KM</p>
+                                <p className="text-[10px] text-gray-400 font-bold">{t('estDistance')}</p>
+                                <p className="text-xs font-black text-gray-900">{assign.metrics.distance_est_km || 0} {t('kmUppercase')}</p>
                             </div>
                             <div>
-                                <p className="text-[10px] text-gray-400 font-bold">SLA RISK</p>
+                                <p className="text-[10px] text-gray-400 font-bold">{t('slaRiskUppercase')}</p>
                                 <p className={`text-xs font-black ${(assign.metrics.sla_risk_score || 0) > 20 ? 'text-red-600' : 'text-green-600'
                                     }`}>{assign.metrics.sla_risk_score || 0}</p>
                             </div>
@@ -75,7 +77,7 @@ const AssignmentBoard = ({ assignments, onMoveStop, onRebalance }: Props) => {
                                         </div>
                                         <p className="text-[10px] text-gray-500 truncate">{stop.address}</p>
                                         <div className="mt-2 flex items-center justify-between">
-                                            <span className="text-[9px] font-bold text-gray-400 uppercase">{stop.qty_summary}</span>
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase">{t(stop.qty_summary as any) || stop.qty_summary}</span>
                                             <StatusBadge status={stop.status} />
                                         </div>
                                     </div>
@@ -84,7 +86,7 @@ const AssignmentBoard = ({ assignments, onMoveStop, onRebalance }: Props) => {
                         ))}
 
                         <button className="w-full py-3 border-2 border-dashed border-gray-200 rounded-2xl text-[10px] font-bold text-gray-400 hover:border-purple-200 hover:text-purple-400 transition-all flex items-center justify-center gap-2">
-                            + ADD STOP
+                            {t('addStop')}
                         </button>
                     </div>
                 </div>
@@ -96,7 +98,7 @@ const AssignmentBoard = ({ assignments, onMoveStop, onRebalance }: Props) => {
                     onClick={onRebalance}
                     className="h-12 px-6 rounded-2xl bg-white border border-purple-200 text-purple-600 text-xs font-black shadow-sm hover:bg-purple-50 transition-all whitespace-nowrap"
                 >
-                    REBALANCE ALL ROUTES
+                    {t('rebalanceAllRoutes')}
                 </button>
             </div>
         </div>

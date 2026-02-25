@@ -1,32 +1,32 @@
 import { useState } from "react";
 import { UserPlus, Mail, Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const InviteUserForm = () => {
     const [email, setEmail] = useState("");
     const [role, setRole] = useState("STAFF");
     const [isLoading, setIsLoading] = useState(false);
+    const { t } = useTranslation();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!email) {
-            toast.error("Email is required");
+            toast.error(t('emailRequired'));
             return;
         }
 
-        // Simple email validation
         if (!/\S+@\S+\.\S+/.test(email)) {
-            toast.error("Please enter a valid email address");
+            toast.error(t('invalidEmail'));
             return;
         }
 
         setIsLoading(true);
-        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         setIsLoading(false);
-        toast.success("Invite sent successfully", {
-            description: `An invitation has been sent to ${email} as ${role}.`
+        toast.success(t('inviteSentSuccess'), {
+            description: `${t('inviteSentDesc').replace('{{email}}', email).replace('{{role}}', role)}`
         });
         setEmail("");
     };
@@ -38,7 +38,7 @@ const InviteUserForm = () => {
                     <div className="h-9 w-9 rounded-xl bg-purple-600 flex items-center justify-center">
                         <UserPlus className="h-4 w-4 text-white" />
                     </div>
-                    <h3 className="text-sm font-bold text-gray-900">Invite New User</h3>
+                    <h3 className="text-sm font-bold text-gray-900">{t('inviteNewUser')}</h3>
                 </div>
             </div>
 
@@ -48,7 +48,7 @@ const InviteUserForm = () => {
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
                             type="email"
-                            placeholder="Enter email address"
+                            placeholder={t('emailPlaceholder')}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             disabled={isLoading}
@@ -64,8 +64,8 @@ const InviteUserForm = () => {
                             disabled={isLoading}
                             className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all appearance-none cursor-pointer"
                         >
-                            <option value="MANAGER">Manager</option>
-                            <option value="STAFF">Delivery Staff</option>
+                            <option value="MANAGER">{t('manager')}</option>
+                            <option value="STAFF">{t('staff')}</option>
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                             <Loader2 className={`h-4 w-4 text-gray-400 animate-spin ${isLoading ? 'opacity-100' : 'opacity-0'}`} />
@@ -80,7 +80,7 @@ const InviteUserForm = () => {
                         {isLoading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                            "Send Invite"
+                            t('sendInvite')
                         )}
                     </button>
                 </div>

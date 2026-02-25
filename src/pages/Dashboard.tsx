@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useInventoryStore, useInvoiceStore, useShopStore, useStaffStore, useDraftStore } from "@/store";
 import StatusBadge from "@/components/shared/StatusBadge";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Dashboard = () => {
   const { skus } = useInventoryStore();
@@ -12,6 +13,7 @@ const Dashboard = () => {
   const { shops } = useShopStore();
   const { staff } = useStaffStore();
   const { drafts } = useDraftStore();
+  const { t } = useTranslation();
 
   // Calculate KPI values
   const dispatchRun = { status: 'IN_PROGRESS', planned: 22, approved: 18, progress: 12, completed: 8 };
@@ -23,20 +25,20 @@ const Dashboard = () => {
   const staffUtil = 28; // avg stops per staff
 
   const kpis = [
-    { label: "Dispatch Status", value: "In Progress", icon: Truck, color: "text-purple-600", bg: "bg-purple-0", change: "12 / 18 Approved", path: "/dispatch" },
-    { label: "Delivery Progress", value: "73%", icon: CheckCircle, color: "text-purple-600", bg: "bg-green-0", change: "312 Delivered", path: "/deliveries" },
-    { label: "SLA Risk", value: slaRisks, icon: AlertTriangle, color: "text-purple-600", bg: "bg-red-0", change: "High Priority", path: "/insights" },
-    { label: "Inventory Risk", value: inventoryRisks, icon: Package, color: "text-purple-600", bg: "bg-orange-0", change: "Stockout Alerts", path: "/inventory" },
-    { label: "Data Quality", value: dataQualityRisks, icon: Activity, color: "text-purple-600", bg: "bg-blue-0", change: "Missing GPS/Phone", path: "/shops" },
-    { label: "Staff Utilization", value: `${staffUtil}`, icon: Users, color: "text-purple-600", bg: "bg-purple-0", change: "Avg Stops/Staff", path: "/staff" },
+    { label: t('dispatchStatus'), value: t('inProgress'), icon: Truck, color: "text-purple-600", bg: "bg-purple-0", change: `12 / 18 ${t('approved')}`, path: "/dispatch" },
+    { label: t('deliveryProgress'), value: "73%", icon: CheckCircle, color: "text-purple-600", bg: "bg-green-0", change: `312 ${t('delivered')}`, path: "/deliveries" },
+    { label: t('slaRisk'), value: slaRisks, icon: AlertTriangle, color: "text-purple-600", bg: "bg-red-0", change: t('highPriority'), path: "/insights" },
+    { label: t('inventoryRisk'), value: inventoryRisks, icon: Package, color: "text-purple-600", bg: "bg-orange-0", change: t('stockoutAlerts'), path: "/inventory" },
+    { label: t('dataQuality'), value: dataQualityRisks, icon: Activity, color: "text-purple-600", bg: "bg-blue-0", change: t('missingGpsPhone'), path: "/shops" },
+    { label: t('staffUtilization'), value: `${staffUtil}`, icon: Users, color: "text-purple-600", bg: "bg-purple-0", change: t('avgStopsStaff'), path: "/staff" },
   ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500">17 Feb 2025 · Real-time overview</p>
+        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard')}</h1>
+        <p className="text-sm text-gray-500">{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {t('realTimeOverview')}</p>
       </div>
 
       {/* KPI Grid */}
@@ -49,7 +51,7 @@ const Dashboard = () => {
               </div>
               <span className="text-xs text-gray-400">{kpi.change}</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+            <p className="text-2xl font-bold text-gray-900">{kpi.value ?? ''}</p>
             <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
           </Link>
         ))}
@@ -60,8 +62,8 @@ const Dashboard = () => {
         {/* Recent Drafts */}
         <div className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Recent Drafts</h3>
-            <span className="text-xs text-gray-400">{drafts.length} total</span>
+            <h3 className="font-semibold text-gray-900">{t('recentDrafts')}</h3>
+            <span className="text-xs text-gray-400">{drafts.length} {t('total')}</span>
           </div>
           <div className="space-y-3">
             {drafts.slice(0, 5).map(draft => (
@@ -70,8 +72,8 @@ const Dashboard = () => {
                   <Sparkles className="h-3.5 w-3.5 text-purple-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{draft.title}</p>
-                  <p className="text-xs text-gray-400">{draft.confidence}% confidence</p>
+                  <p className="text-sm font-medium text-gray-800 truncate">{t(draft.title as any) || draft.title}</p>
+                  <p className="text-xs text-gray-400">{draft.confidence}% {t('confidence')}</p>
                 </div>
                 <StatusBadge status={draft.status} />
               </div>
@@ -82,8 +84,8 @@ const Dashboard = () => {
         {/* Inventory Alerts */}
         <div className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Inventory Alerts</h3>
-            <span className="text-xs text-red-500">{lowStockCount} low stock</span>
+            <h3 className="font-semibold text-gray-900">{t('inventoryAlerts')}</h3>
+            <span className="text-xs text-red-500">{lowStockCount} {t('lowStock')}</span>
           </div>
           <div className="space-y-3">
             {skus.filter(s => s.lowStock).slice(0, 5).map(sku => (
@@ -93,7 +95,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{sku.name}</p>
-                  <p className="text-xs text-gray-400">{sku.available} / {sku.threshold} threshold</p>
+                  <p className="text-xs text-gray-400">{sku.available} / {sku.threshold} {t('threshold').toLowerCase()}</p>
                 </div>
                 <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                   <div className="h-full rounded-full bg-red-500" style={{ width: `${(sku.available / sku.threshold) * 100}%` }} />
@@ -103,7 +105,7 @@ const Dashboard = () => {
             {lowStockCount === 0 && (
               <div className="flex items-center gap-2 text-green-600 py-4 justify-center">
                 <CheckCircle className="h-5 w-5" />
-                <span className="text-sm font-medium">All stock levels healthy</span>
+                <span className="text-sm font-medium">{t('allStockHealthy')}</span>
               </div>
             )}
           </div>
@@ -112,7 +114,7 @@ const Dashboard = () => {
         {/* Staff Performance */}
         <div className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Staff Performance</h3>
+            <h3 className="font-semibold text-gray-900">{t('staffPerformance')}</h3>
           </div>
           <div className="space-y-3">
             {staff.slice(0, 6).map(s => (
@@ -137,7 +139,7 @@ const Dashboard = () => {
         {/* Invoice Summary */}
         <div className="rounded-xl border border-gray-100 bg-white p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Invoice Status</h3>
+            <h3 className="font-semibold text-gray-900">{t('invoiceStatus')}</h3>
           </div>
           <div className="space-y-3">
             {(['DRAFT', 'SENT', 'PARTIAL', 'PAID'] as const).map(status => {

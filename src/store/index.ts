@@ -279,6 +279,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
             credit: 10
         },
         temperature: 0.2,
+        language: 'en',
     },
     updateSettings: (updates) => set(s => ({ settings: { ...s.settings, ...updates } })),
 }));

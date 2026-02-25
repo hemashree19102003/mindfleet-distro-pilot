@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { Bot, User } from "lucide-react";
 import { ChatMessage, DraftCard as DraftCardType } from "@/store/types";
 import DraftCard from "@/components/shared/DraftCard";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Props {
     messages: ChatMessage[];
@@ -11,6 +12,7 @@ interface Props {
 
 const ChatThread = ({ messages, drafts, isTyping }: Props) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -34,7 +36,7 @@ const ChatThread = ({ messages, drafts, isTyping }: Props) => {
                                 </div>
                             ) : (
                                 <>
-                                    <p className="text-xs text-gray-600 leading-relaxed bg-gray-50/50 p-2 rounded-lg -ml-2">{msg.content}</p>
+                                    <p className="text-xs text-gray-600 leading-relaxed bg-gray-50/50 p-2 rounded-lg -ml-2">{t(msg.content as any) || msg.content}</p>
                                     {draft && <DraftCard draft={draft} />}
                                 </>
                             )}

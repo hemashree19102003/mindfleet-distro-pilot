@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Send, Paperclip } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Props {
     onSend: (text: string, attachments?: File[]) => void;
@@ -9,6 +10,7 @@ interface Props {
 
 const ChatInput = ({ onSend, disabled }: Props) => {
     const [input, setInput] = useState("");
+    const { t } = useTranslation();
 
     const handleSend = () => {
         if (!input.trim() || disabled) return;
@@ -17,10 +19,16 @@ const ChatInput = ({ onSend, disabled }: Props) => {
     };
 
     const handleAttach = () => {
-        toast.info("CSV Import triggered. Attach file...");
+        toast.info(t('attachCsvTriggered'));
     };
 
-    const chips = ["Plan Dispatch", "Show Risks", "Update Inventory", "Generate Invoices", "Rebalance Routes"];
+    const chips = [
+        { label: t('planDispatch'), value: t('planDispatch') },
+        { label: t('showRisks'), value: t('showRisks') },
+        { label: t('updateInventory'), value: t('updateInventory') },
+        { label: t('genInvoices'), value: t('genInvoices') },
+        { label: t('rebalanceRoutes'), value: t('rebalanceRoutes') }
+    ];
 
     return (
         <div className="border-t border-purple-100 px-4 md:px-6 pb-4 md:pb-5 pt-3 space-y-3 shrink-0">
@@ -28,12 +36,12 @@ const ChatInput = ({ onSend, disabled }: Props) => {
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 {chips.map((chip) => (
                     <button
-                        key={chip}
-                        onClick={() => setInput(chip)}
+                        key={chip.value}
+                        onClick={() => setInput(chip.value)}
                         disabled={disabled}
                         className="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[10px] font-medium text-purple-600 transition-all hover:bg-purple-100 hover:border-purple-400 disabled:opacity-50"
                     >
-                        {chip}
+                        {chip.label}
                     </button>
                 ))}
             </div>
@@ -43,7 +51,7 @@ const ChatInput = ({ onSend, disabled }: Props) => {
                 <button
                     onClick={handleAttach}
                     className="text-gray-400 hover:text-purple-600 transition-colors"
-                    title="Attach CSV / File"
+                    title={t('attachCsv')}
                 >
                     <Paperclip className="h-4 w-4" />
                 </button>
@@ -52,7 +60,7 @@ const ChatInput = ({ onSend, disabled }: Props) => {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask me to plan dispatch, adjust stock, or analyze performance…"
+                    placeholder={t('chatInputPlaceholder')}
                     className="flex-1 bg-transparent text-xs text-gray-700 placeholder:text-gray-400 outline-none"
                     disabled={disabled}
                 />

@@ -1,5 +1,6 @@
 import { AlertTriangle, Clock, RefreshCw, XCircle } from "lucide-react";
-import { DeliveryRow } from "./DeliveryTable"; // Assuming DeliveryRow type is reused
+import { DeliveryRow } from "./DeliveryTable";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Props {
     failedStops: DeliveryRow[];
@@ -8,6 +9,8 @@ interface Props {
 }
 
 const ExceptionsPanel = ({ failedStops, delayedStops, onCreateReassignment }: Props) => {
+    const { t } = useTranslation();
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Failed Deliveries Card */}
@@ -18,8 +21,8 @@ const ExceptionsPanel = ({ failedStops, delayedStops, onCreateReassignment }: Pr
                             <XCircle className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">Failed Attempts</h3>
-                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">{failedStops.length} STOPS</p>
+                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">{t('failedAttempts')}</h3>
+                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">{failedStops.length} {t('stopsUppercase')}</p>
                         </div>
                     </div>
                     {failedStops.length > 0 && (
@@ -27,14 +30,14 @@ const ExceptionsPanel = ({ failedStops, delayedStops, onCreateReassignment }: Pr
                             onClick={onCreateReassignment}
                             className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-xl text-xs font-bold shadow-sm hover:translate-y-[-1px] transition-transform active:scale-95 flex items-center gap-2"
                         >
-                            <RefreshCw className="h-3.5 w-3.5" /> REASSIGN
+                            <RefreshCw className="h-3.5 w-3.5" /> {t('reassign')}
                         </button>
                     )}
                 </div>
 
                 {failedStops.length === 0 ? (
                     <div className="h-20 flex items-center justify-center text-gray-400 text-xs font-medium italic border-2 border-dashed border-red-100 rounded-xl">
-                        No failed deliveries today. Great job!
+                        {t('noFailedDeliveries')}
                     </div>
                 ) : (
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -45,7 +48,7 @@ const ExceptionsPanel = ({ failedStops, delayedStops, onCreateReassignment }: Pr
                                     <p className="text-[10px] text-gray-500">{stop.staffName} • {stop.area}</p>
                                 </div>
                                 <span className="text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded-md">
-                                    FAILED
+                                    {t('failedStatus')}
                                 </span>
                             </div>
                         ))}
@@ -61,15 +64,15 @@ const ExceptionsPanel = ({ failedStops, delayedStops, onCreateReassignment }: Pr
                             <Clock className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">SLA Risks & Delays</h3>
-                            <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest">{delayedStops.length} AT RISK</p>
+                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">{t('slaRisksDelays')}</h3>
+                            <p className="text-[10px] font-bold text-yellow-600 uppercase tracking-widest">{delayedStops.length} {t('atRiskUppercase')}</p>
                         </div>
                     </div>
                 </div>
 
                 {delayedStops.length === 0 ? (
                     <div className="h-20 flex items-center justify-center text-gray-400 text-xs font-medium italic border-2 border-dashed border-yellow-100 rounded-xl">
-                        All deliveries on time within SLA.
+                        {t('allDeliveriesOnTime')}
                     </div>
                 ) : (
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
@@ -77,10 +80,10 @@ const ExceptionsPanel = ({ failedStops, delayedStops, onCreateReassignment }: Pr
                             <div key={stop.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-yellow-100 shadow-sm">
                                 <div>
                                     <p className="text-xs font-bold text-gray-900">{stop.shopName}</p>
-                                    <p className="text-[10px] text-gray-500">{stop.staffName} • ETA: {stop.eta}</p>
+                                    <p className="text-[10px] text-gray-500">{stop.staffName} • {t('etaLabel')}: {stop.eta}</p>
                                 </div>
                                 <div className="flex items-center gap-1 text-[10px] font-black text-yellow-600 uppercase tracking-widest bg-yellow-50 px-2 py-0.5 rounded-md">
-                                    <AlertTriangle className="h-3 w-3" /> RISK
+                                    <AlertTriangle className="h-3 w-3" /> {t('riskLabel')}
                                 </div>
                             </div>
                         ))}

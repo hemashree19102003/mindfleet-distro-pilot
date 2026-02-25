@@ -1,8 +1,10 @@
 import { Calendar, Phone, User as UserIcon } from "lucide-react";
 import { useStaffStore } from "@/store";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const OnboardedStaffTable = () => {
     const { onboardingStaff } = useStaffStore();
+    const { t } = useTranslation();
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mt-6">
@@ -12,8 +14,8 @@ const OnboardedStaffTable = () => {
                         <UserIcon className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-gray-900">Recently Onboarded Staff</h3>
-                        <p className="text-[11px] text-gray-400 mt-0.5">Details of new delivery partners added to the fleet</p>
+                        <h3 className="text-sm font-bold text-gray-900">{t('recentlyOnboardedStaff')}</h3>
+                        <p className="text-[11px] text-gray-400 mt-0.5">{t('onboardedStaffDesc')}</p>
                     </div>
                 </div>
             </div>
@@ -22,10 +24,10 @@ const OnboardedStaffTable = () => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-gray-50/50 border-b border-gray-100">
-                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Staff Member</th>
-                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Contact</th>
-                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Onboarding Info</th>
-                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('staffMember')}</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('contact')}</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('onboardingInfo')}</th>
+                            <th className="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider">{t('statusLabel')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -58,7 +60,7 @@ const OnboardedStaffTable = () => {
                                         staff.status === 'In Training' ? 'bg-blue-100 text-blue-700' :
                                             'bg-amber-100 text-amber-700'
                                         }`}>
-                                        {staff.status}
+                                        {t(staff.status as any) || staff.status}
                                     </span>
                                 </td>
                             </tr>

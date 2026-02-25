@@ -2,6 +2,7 @@ import { Truck, MapPin, TrendingUp, AlertTriangle } from "lucide-react";
 import DraftCard from "@/components/shared/DraftCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { DraftCard as DraftCardType } from "@/store/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Props {
     dispatchDrafts: DraftCardType[];
@@ -21,15 +22,16 @@ const DispatchPlanPanel = ({
     onViewDiff
 }: Props) => {
     const selectedDraft = dispatchDrafts.find(d => d.id === selectedDraftId) || dispatchDrafts[0];
+    const { t } = useTranslation();
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
             {/* Draft List */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Active Drafts</h3>
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">{t('activeDrafts')}</h3>
                     <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
-                        {dispatchDrafts.length} PENDING
+                        {dispatchDrafts.length} {t('pendingDraftsCount')}
                     </span>
                 </div>
                 {dispatchDrafts.map(draft => (
@@ -46,7 +48,7 @@ const DispatchPlanPanel = ({
                 ))}
                 {dispatchDrafts.length === 0 && (
                     <div className="p-8 text-center text-gray-400 border border-dashed border-gray-200 rounded-2xl">
-                        No active dispatch drafts. Ask AI to "Plan Dispatch".
+                        {t('noActiveDrafts')}
                     </div>
                 )}
             </div>
@@ -55,7 +57,7 @@ const DispatchPlanPanel = ({
             <div className="space-y-6">
                 <div className="rounded-3xl border border-purple-100 bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">Draft Plan Details</h3>
+                        <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">{t('draftPlanDetails')}</h3>
                         {selectedDraft && <StatusBadge status={selectedDraft.status} />}
                     </div>
 
@@ -64,19 +66,19 @@ const DispatchPlanPanel = ({
                             <div className="grid grid-cols-2 gap-4">
                                 <SummaryItem
                                     icon={Truck}
-                                    label="Staff Count"
+                                    label={t('staffCount')}
                                     value={String((selectedDraft.payload as any)?.staffCount || 12)}
                                 />
                                 <SummaryItem
                                     icon={MapPin}
-                                    label="Shop Count"
+                                    label={t('shopCount')}
                                     value={String((selectedDraft.payload as any)?.shopCount || 142)}
                                 />
-                                <SummaryItem icon={TrendingUp} label="Confidence" value={`${selectedDraft.confidence}%`} color="text-purple-600" />
+                                <SummaryItem icon={TrendingUp} label={t('confidenceLabel')} value={`${selectedDraft.confidence}%`} color="text-purple-600" />
                                 {/* Check safely for shortages */}
                                 <SummaryItem
                                     icon={AlertTriangle}
-                                    label="Shortages"
+                                    label={t('shortages')}
                                     value={String(selectedDraft.shortages?.length || 0)}
                                     color={selectedDraft.shortages && selectedDraft.shortages.length > 0 ? "text-red-500" : "text-green-600"}
                                 />
@@ -84,8 +86,8 @@ const DispatchPlanPanel = ({
 
                             {selectedDraft.explanation && (
                                 <div className="p-4 rounded-2xl bg-purple-50 border border-purple-100">
-                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1.5">AI Logic Explanation</p>
-                                    <p className="text-xs text-gray-700 leading-relaxed italic">"{selectedDraft.explanation}"</p>
+                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1.5">{t('aiLogicExplanation')}</p>
+                                    <p className="text-xs text-gray-700 leading-relaxed italic">"{t(selectedDraft.explanation as any) || selectedDraft.explanation}"</p>
                                 </div>
                             )}
 
@@ -95,26 +97,26 @@ const DispatchPlanPanel = ({
                                     disabled={selectedDraft.status !== 'DRAFT'}
                                     className="flex-1 h-11 rounded-xl purple-gradient text-xs font-bold text-white shadow-lg shadow-purple-200 transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:grayscale"
                                 >
-                                    APPROVE & EXECUTE
+                                    {t('approveAndExecute')}
                                 </button>
                                 <button
                                     onClick={() => onRejectDraft(selectedDraft.id)}
                                     disabled={selectedDraft.status !== 'DRAFT'}
                                     className="flex-1 h-11 rounded-xl border border-gray-100 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all disabled:opacity-50"
                                 >
-                                    REJECT / DISCARD
+                                    {t('rejectDiscard')}
                                 </button>
                                 <button
                                     onClick={() => onViewDiff(selectedDraft)}
                                     className="flex-1 h-11 rounded-xl border border-gray-100 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all font-mono"
                                 >
-                                    VIEW DIFF
+                                    {t('viewDiff')}
                                 </button>
                             </div>
                         </div>
                     ) : (
                         <div className="py-10 text-center text-gray-400">
-                            <p className="text-sm">Select a draft to see analysis</p>
+                            <p className="text-sm">{t('selectDraftToSeeAnalysis')}</p>
                         </div>
                     )}
                 </div>

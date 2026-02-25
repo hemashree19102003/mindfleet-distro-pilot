@@ -14,6 +14,7 @@ import DecisionJournalDrawer from "@/components/shared/DecisionJournalDrawer";
 import { toast } from "sonner";
 import { DraftCard } from "@/store/types";
 import { createDraftFromAI } from "@/data/generators";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Dispatch = () => {
   const [activeTab, setActiveTab] = useState<"plan" | "assignments" | "map" | "journal">("plan");
@@ -33,6 +34,7 @@ const Dispatch = () => {
   const dispatchStatus = plan.status;
   const { drafts, addDraft, updateDraftStatus } = useDraftStore();
   const { currentUser } = useUserStore();
+  const { t } = useTranslation();
 
   const handleManualReassign = (reason: string) => {
     if (reassigningShop) {
@@ -41,13 +43,13 @@ const Dispatch = () => {
       const targetStaff = staff.find(s => s.status === 'Active');
       if (targetStaff) {
         reassignShop(reassigningShop.shopId, 'unassigned', targetStaff.id, reason, currentUser.name);
-        toast.success(`Assigned ${reassigningShop.shopName} to ${targetStaff.name}`);
+        toast.success(`${t('assigned')} ${reassigningShop.shopName} ${t('to')} ${targetStaff.name}`);
       }
       setReassigningShop(null);
     } else if (movingStop) {
       // Logic for stop-to-other-staff assignment
       reassignShop(movingStop.stopId, movingStop.fromStaffId, movingStop.toStaffId, reason, currentUser.name);
-      toast.success("Stop reassigned successfully");
+      toast.success(t('stopReassignedSuccess'));
       setMovingStop(null);
     }
   };
@@ -60,19 +62,19 @@ const Dispatch = () => {
     addDraft(newDraft);
     setSelectedDraftId(newDraft.id);
     setActiveTab('plan');
-    toast.success("New Dispatch Plan drafted by AI");
+    toast.success(t('newDispatchDrafted'));
   };
 
   const handleApproveDraft = (id: string) => {
     updateDraftStatus(id, 'APPROVED', currentUser.name);
-    toast.success("Dispatch Plan Approved");
+    toast.success(t('dispatchPlanApproved'));
     // In real app, this would trigger applyPlan() action
   };
 
   const handleRejectDraft = (id: string) => {
     // In real app, open reason modal first
-    updateDraftStatus(id, 'REJECTED', currentUser.name, "Rejected by user");
-    toast.info("Draft Rejected");
+    updateDraftStatus(id, 'REJECTED', currentUser.name, t('rejectedByUser'));
+    toast.info(t('draftRejected'));
   };
 
   // Prepare assignments for board
@@ -84,9 +86,9 @@ const Dispatch = () => {
       const stops = (assignment?.shopIds || []).map((sid, idx) => ({
         stop_id: sid,
         shop_id: sid,
-        shop_name: `Shop ${sid}`, // Mock name
-        address: "123 Main St, Chennai", // Mock address
-        qty_summary: "12 crates",
+        shop_name: `${t('mockShopPrefix')} ${sid}`, // Mock name
+        address: t('mockAddress'), // Mock address
+        qty_summary: `12 ${t('crates') || 'crates'}`,
         status: 'PENDING' as const,
         sla_risk: idx % 10 === 0 ? 'HIGH' as const : 'LOW' as const,
       }));
@@ -116,39 +118,39 @@ const Dispatch = () => {
     <div className="space-y-6 animate-fade-in relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Dispatch Operations</h1>
-          <p className="text-sm text-gray-500">Manage routes, rebalance staff, and monitor live progress</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('dispatchOperations')}</h1>
+          <p className="text-sm text-gray-500">{t('dispatchDescription')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowJournal(true)}
             className="flex h-10 items-center gap-2 rounded-xl border border-purple-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-purple-50 transition-all active:scale-95"
           >
-            <History className="h-4 w-4" /> JOURNAL
+            <History className="h-4 w-4" /> {t('journal')}
           </button>
           <button
             onClick={handleNewDispatch}
             className="flex h-10 items-center gap-2 rounded-xl purple-gradient px-4 text-xs font-bold text-white shadow-lg shadow-purple-200 hover:opacity-90 transition-all active:scale-95"
           >
-            <Plus className="h-4 w-4" /> NEW DISPATCH
+            <Plus className="h-4 w-4" /> {t('newDispatch')}
           </button>
         </div>
       </div>
 
       {dispatchStatus === 'APPROVED' && (
         <RiskBanner
-          title="Manual Override Detected"
-          description="A shop was reassigned after AI optimization. Confidence reduced to 89%."
-          actionLabel="RE-OPTIMIZE"
-          onAction={() => toast.success("AI re-optimizing routes...")}
+          title={t('manualOverrideDetected')}
+          description={t('overrideDescription')}
+          actionLabel={t('reOptimize')}
+          onAction={() => toast.success(t('aiReoptimizing'))}
         />
       )}
 
       <div className="flex border-b border-gray-100 space-x-8">
         {[
-          { id: 'plan', label: 'Draft Plan', icon: LayoutGrid },
-          { id: 'assignments', label: 'Assignments', icon: Users },
-          { id: 'map', label: 'Route Map', icon: MapIcon },
+          { id: 'plan', label: t('draftPlan'), icon: LayoutGrid },
+          { id: 'assignments', label: t('assignments'), icon: Users },
+          { id: 'map', label: t('routeMap'), icon: MapIcon },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -173,7 +175,7 @@ const Dispatch = () => {
           onApproveDraft={handleApproveDraft}
           onRejectDraft={handleRejectDraft}
           onViewDiff={(draft) => {
-            toast.info(`Opening diff for ${draft.title} (Mock)`);
+            toast.info(`${t('openingDiffFor')} ${t(draft.title as any) || draft.title} (Mock)`);
             // In real app: setShowDiff(true); setDiffDraft(draft);
           }}
         />
@@ -183,7 +185,7 @@ const Dispatch = () => {
         <AssignmentBoard
           assignments={boardAssignments}
           onMoveStop={(stopId, fromId, toId) => setMovingStop({ stopId, fromStaffId: fromId, toStaffId: toId })}
-          onRebalance={() => toast.info("AI Rebalance triggered")}
+          onRebalance={() => toast.info(t('aiRebalanceTriggered'))}
         />
       )}
 
@@ -213,7 +215,7 @@ const Dispatch = () => {
                   lng: anchor[1] + (Math.random() - 0.5) * 0.015,
                   label: s.shop_name,
                   status: 'PENDING' as const,
-                  area: b.staff_id === 's1' ? "North" : b.staff_id === 's2' ? "Central" : "South"
+                  area: b.staff_id === 's1' ? t('north') : b.staff_id === 's2' ? t('central') : t('south')
                 };
               }));
 
@@ -246,7 +248,7 @@ const Dispatch = () => {
 
       <ReasonTagModal
         open={!!reassigningShop || !!movingStop}
-        title={reassigningShop ? `Reassign ${reassigningShop.shopName}` : "Reassign Stop"}
+        title={reassigningShop ? `${t('reassignLabel')} ${reassigningShop.shopName}` : t('reassignStop')}
         onSubmit={handleManualReassign}
         onCancel={() => { setReassigningShop(null); setMovingStop(null); }}
       />

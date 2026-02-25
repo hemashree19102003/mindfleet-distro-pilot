@@ -4,8 +4,10 @@ import {
 } from "lucide-react";
 import { useStaffStore, useDispatchStore, useShopStore, useUserStore } from "@/store";
 import StopCard from "@/components/shared/StopCard";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const StaffStops = () => {
+    const { t } = useTranslation();
     const { currentUser } = useUserStore();
     const { staff } = useStaffStore();
     const { plan } = useDispatchStore();
@@ -36,8 +38,8 @@ const StaffStops = () => {
             {/* Sticky Header */}
             <div className="shrink-0 bg-gray-50/95 backdrop-blur-md pt-2 pb-4 z-30 flex items-center justify-between px-4">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 leading-tight">Delivery List</h1>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{myStops.length} STOPS TODAY</p>
+                    <h1 className="text-2xl font-black text-gray-900 leading-tight">{t('deliveryList')}</h1>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{myStops.length} {t('stopsToday')}</p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -72,7 +74,7 @@ const StaffStops = () => {
                                 <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
                                     <LayoutList className="h-10 w-10 text-gray-300" />
                                 </div>
-                                <p className="text-sm font-bold text-gray-400">No stops assigned to you yet.</p>
+                                <p className="text-sm font-bold text-gray-400">{t('noStopsAssigned')}</p>
                             </div>
                         )}
                     </div>
@@ -81,8 +83,8 @@ const StaffStops = () => {
                         {/* Simple Mock Map for Mobile */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
                             <Map className="h-12 w-12 opacity-20 mb-2" />
-                            <p className="text-xs font-bold">Interactive Map View</p>
-                            <p className="text-[10px]">Showing {myStops.length} stops</p>
+                            <p className="text-xs font-bold">{t('interactiveMapView')}</p>
+                            <p className="text-[10px]">{t('showing')} {myStops.length} {t('stops')}</p>
                         </div>
                         {/* In real implementation, render RouteMap here with mobile props */}
                     </div>

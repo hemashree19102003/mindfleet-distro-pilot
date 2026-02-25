@@ -6,13 +6,16 @@ import {
   Shield, AlertTriangle, CheckCircle2, Info,
   Sparkles, ChevronUp
 } from "lucide-react";
-import { useUserStore } from "@/store";
+import { useUserStore, useSettingsStore } from "@/store";
 import { toast } from "sonner";
 import {
   UsersOverview,
   InviteUserForm,
-  OnboardedStaffTable
+  OnboardedStaffTable,
+  RolesAndPrivileges
 } from "@/components/settings/users";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Language } from "@/store/types";
 
 // ─── Types ───────────────────────────────────────────────────────
 type SettingsTab = 'business' | 'notifications' | 'account' | 'users';
@@ -127,6 +130,8 @@ function Input({ value, onChange, placeholder, type = "text", disabled = false }
 // ─── Main Component ─────────────────────────────────────────────
 const SettingsPage = () => {
   const { currentUser } = useUserStore();
+  const { settings, updateSettings } = useSettingsStore();
+  const { t, lang } = useTranslation();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<SettingsTab>('business');
 
@@ -145,7 +150,6 @@ const SettingsPage = () => {
   const [warehouseAddr, setWarehouseAddr] = useState("Plot 12, Industrial Estate, Ambattur, Chennai 600058");
   const [currency, setCurrency] = useState("INR");
   const [timezone, setTimezone] = useState("IST");
-  const [language, setLanguage] = useState("en");
 
   const [deliveryWindow, setDeliveryWindow] = useState("6:00 AM - 2:00 PM");
 
@@ -171,16 +175,16 @@ const SettingsPage = () => {
 
   const handleSave = () => {
     setHasChanges(false);
-    toast.success("Settings saved successfully", {
-      description: "All configuration changes have been applied.",
+    toast.success(t('settingsSaved'), {
+      description: t('settingsSavedDesc'),
     });
   };
 
   const tabs: { id: SettingsTab; label: string; icon: any; adminOnly?: boolean }[] = [
-    { id: 'business', label: 'Business', icon: Building2 },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'account', label: 'Account & Security', icon: Shield },
-    { id: 'users', label: 'Users & Access', icon: Users, adminOnly: true },
+    { id: 'business', label: t('business'), icon: Building2 },
+    { id: 'notifications', label: t('notifications'), icon: Bell },
+    { id: 'account', label: t('accountSecurity'), icon: Shield },
+    { id: 'users', label: t('usersAccess'), icon: Users, adminOnly: true },
   ];
 
   const filteredTabs = tabs.filter(t => !t.adminOnly || currentUser.role === 'ADMIN');
@@ -191,8 +195,8 @@ const SettingsPage = () => {
       {/* ─── Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Settings</h1>
-          <p className="text-sm text-gray-400 mt-1">Manage your business configuration and preferences</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('settings')}</h1>
+          <p className="text-sm text-gray-400 mt-1">{t('manageBusiness')}</p>
         </div>
         <button
           onClick={handleSave}
@@ -203,7 +207,7 @@ const SettingsPage = () => {
             }`}
         >
           <Save className="h-4 w-4" />
-          Save Changes
+          {t('saveChanges')}
         </button>
       </div>
 
@@ -230,36 +234,36 @@ const SettingsPage = () => {
         {/* ════════════════ BUSINESS TAB ════════════════ */}
         {activeTab === 'business' && (
           <>
-            <Section title="Company Information" subtitle="Your registered business details" icon={Building2}>
-              <FieldRow label="Business Name" description="Legal entity name as registered">
+            <Section title={t('companyInfo')} subtitle={t('registeredDetails')} icon={Building2}>
+              <FieldRow label={t('businessName')} description={t('legalEntity')}>
                 <Input value={businessName} onChange={(v) => { setBusinessName(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="GST / Tax ID">
+              <FieldRow label={t('gstTaxId')}>
                 <Input value={gstNumber} onChange={(v) => { setGstNumber(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Contact Phone">
+              <FieldRow label={t('contactPhone')}>
                 <Input value={businessPhone} onChange={(v) => { setBusinessPhone(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Operations Email">
+              <FieldRow label={t('opsEmail')}>
                 <Input value={businessEmail} onChange={(v) => { setBusinessEmail(v); markChanged(); }} />
               </FieldRow>
             </Section>
 
-            <Section title="Warehouse & Depot" subtitle="Primary distribution center location" icon={MapPin}>
-              <FieldRow label="Warehouse Address" description="GPS-tagged dispatch origin point">
+            <Section title={t('warehouseDepot')} subtitle={t('primaryLocation')} icon={MapPin}>
+              <FieldRow label={t('warehouseAddr')} description={t('gpsDispatch')}>
                 <Input value={warehouseAddr} onChange={(v) => { setWarehouseAddr(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Operating Hours">
+              <FieldRow label={t('operatingHours')}>
                 <Input value={deliveryWindow} onChange={(v) => { setDeliveryWindow(v); markChanged(); }} />
               </FieldRow>
             </Section>
 
-            <Section title="Regional Preferences" icon={Globe}>
-              <FieldRow label="Currency">
+            <Section title={t('regionalPreferences')} icon={Globe}>
+              <FieldRow label={t('currency')}>
                 <Select value={currency} onChange={(v) => { setCurrency(v); markChanged(); }} options={[
                   { value: 'INR', label: '₹ INR — Indian Rupee' },
                   { value: 'USD', label: '$ USD — US Dollar' },
@@ -267,7 +271,7 @@ const SettingsPage = () => {
                 ]} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Timezone">
+              <FieldRow label={t('timezone')}>
                 <Select value={timezone} onChange={(v) => { setTimezone(v); markChanged(); }} options={[
                   { value: 'IST', label: 'IST — India Standard Time' },
                   { value: 'UTC', label: 'UTC — Coordinated Universal Time' },
@@ -275,8 +279,8 @@ const SettingsPage = () => {
                 ]} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Language">
-                <Select value={language} onChange={(v) => { setLanguage(v); markChanged(); }} options={[
+              <FieldRow label={t('language')}>
+                <Select value={lang} onChange={(v) => { updateSettings({ language: v as Language }); }} options={[
                   { value: 'en', label: 'English' },
                   { value: 'ta', label: 'தமிழ் (Tamil)' },
                   { value: 'hi', label: 'हिन्दी (Hindi)' },
@@ -290,44 +294,44 @@ const SettingsPage = () => {
         {/* ════════════════ NOTIFICATIONS TAB ════════════════ */}
         {activeTab === 'notifications' && (
           <>
-            <Section title="Delivery Alerts" subtitle="Real-time notifications for field operations" icon={Bell}>
-              <FieldRow label="Delivery Completed" description="Notify when a stop is marked as delivered">
+            <Section title={t('deliveryAlerts')} subtitle={t('realTimeOps')} icon={Bell}>
+              <FieldRow label={t('deliveryCompleted')} description={t('notifyStopDelivered')}>
                 <Toggle checked={notifyDeliveryComplete} onChange={(v) => { setNotifyDeliveryComplete(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Delivery Failed" description="Alert when a delivery attempt fails">
+              <FieldRow label={t('deliveryFailed')} description={t('alertAttemptFailed')}>
                 <Toggle checked={notifyDeliveryFailed} onChange={(v) => { setNotifyDeliveryFailed(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="SLA At Risk" description="Warning when a stop may miss its delivery window">
+              <FieldRow label={t('slaRisk')} description={t('warningMissWindow')}>
                 <Toggle checked={notifySlaRisk} onChange={(v) => { setNotifySlaRisk(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Staff Idle > 30 min" description="Flag when a staff member hasn't moved for 30 minutes">
+              <FieldRow label={t('staffIdle')} description={t('flagNoMovement')}>
                 <Toggle checked={notifyStaffIdle} onChange={(v) => { setNotifyStaffIdle(v); markChanged(); }} />
               </FieldRow>
             </Section>
 
-            <Section title="Inventory & Finance" subtitle="Stock and payment related alerts" icon={Package}>
-              <FieldRow label="Low Stock Warning" description="Alert when SKU falls below safety threshold">
+            <Section title={t('inventoryFinance')} subtitle={t('stockPaymentAlerts')} icon={Package}>
+              <FieldRow label={t('lowStockWarning')} description={t('alertBelowThreshold')}>
                 <Toggle checked={notifyLowStock} onChange={(v) => { setNotifyLowStock(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Payment Overdue" description="Notify when shop balance exceeds credit limit">
+              <FieldRow label={t('paymentOverdue')} description={t('notifyBalanceExceed')}>
                 <Toggle checked={notifyPaymentOverdue} onChange={(v) => { setNotifyPaymentOverdue(v); markChanged(); }} />
               </FieldRow>
             </Section>
 
-            <Section title="Reports & Channels" subtitle="How and when you receive updates" icon={Clock}>
-              <FieldRow label="SMS Alerts" description="Send critical alerts via SMS to admin phone">
+            <Section title={t('reportsChannels')} subtitle={t('howReceiveUpdates')} icon={Clock}>
+              <FieldRow label={t('smsAlerts')} description={t('sendCriticalSms')}>
                 <Toggle checked={smsAlerts} onChange={(v) => { setSmsAlerts(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Daily Summary Report" description="Automated end-of-day performance email">
+              <FieldRow label={t('dailySummary')} description={t('automatedEodEmail')}>
                 <Toggle checked={dailyReport} onChange={(v) => { setDailyReport(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Report Send Time">
+              <FieldRow label={t('reportSendTime')}>
                 <Select value={reportTime} onChange={(v) => { setReportTime(v); markChanged(); }} options={[
                   { value: '06:00 PM', label: '6:00 PM' },
                   { value: '08:00 PM', label: '8:00 PM' },
@@ -342,29 +346,29 @@ const SettingsPage = () => {
         {/* ════════════════ ACCOUNT & SECURITY TAB ════════════════ */}
         {activeTab === 'account' && (
           <>
-            <Section title="Account Details" icon={Users}>
-              <FieldRow label="Full Name">
+            <Section title={t('accountDetails')} icon={Users}>
+              <FieldRow label={t('fullName')}>
                 <Input value={currentUser.name} onChange={() => { }} disabled />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Role">
+              <FieldRow label={t('role')}>
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
                   <Shield className="h-4 w-4 text-gray-400" />
                   <span className="text-sm font-medium text-gray-500">{currentUser.role}</span>
                 </div>
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="User ID">
+              <FieldRow label={t('userId')}>
                 <Input value={currentUser.id} onChange={() => { }} disabled />
               </FieldRow>
             </Section>
 
-            <Section title="Security" subtitle="Authentication and session management" icon={Shield}>
-              <FieldRow label="Two-Factor Authentication" description="Require OTP for login and critical operations">
+            <Section title={t('security')} subtitle={t('authSession')} icon={Shield}>
+              <FieldRow label={t('twoFa')} description={t('requireOtp')}>
                 <Toggle checked={twoFaEnabled} onChange={(v) => { setTwoFaEnabled(v); markChanged(); }} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Session Timeout (hours)" description="Auto-logout after inactivity period">
+              <FieldRow label={t('sessionTimeout')} description={t('autoLogout')}>
                 <Select value={sessionTimeout} onChange={(v) => { setSessionTimeout(v); markChanged(); }} options={[
                   { value: '2', label: '2 hours' },
                   { value: '4', label: '4 hours' },
@@ -373,7 +377,7 @@ const SettingsPage = () => {
                 ]} />
               </FieldRow>
               <div className="border-t border-gray-50" />
-              <FieldRow label="Data Retention (days)" description="How long delivery logs and GPS traces are kept">
+              <FieldRow label={t('dataRetention')} description={t('howLongLogsKept')}>
                 <Select value={dataRetention} onChange={(v) => { setDataRetention(v); markChanged(); }} options={[
                   { value: '90', label: '90 days' },
                   { value: '180', label: '180 days' },
@@ -387,11 +391,9 @@ const SettingsPage = () => {
             <div className="rounded-2xl border border-purple-100 bg-purple-50/50 p-5 flex items-start gap-4">
               <Info className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-purple-900">Data & Compliance</p>
+                <p className="text-sm font-semibold text-purple-900">{t('dataCompliance')}</p>
                 <p className="text-xs text-purple-700 mt-1 leading-relaxed">
-                  All delivery records, GPS traces, and payment data are encrypted at rest (AES-256) and in transit (TLS 1.3).
-                  Data is stored in India-region servers compliant with IT Act 2000 and DPDP Act 2023.
-                  Contact your administrator for data export or deletion requests.
+                  {t('encryptionNote')}
                 </p>
               </div>
             </div>
@@ -402,6 +404,7 @@ const SettingsPage = () => {
         {activeTab === 'users' && currentUser.role === 'ADMIN' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <UsersOverview stats={MOCK_STATS} />
+            <RolesAndPrivileges />
             <InviteUserForm />
             <OnboardedStaffTable />
           </div>
@@ -413,19 +416,19 @@ const SettingsPage = () => {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom duration-300">
           <div className="flex items-center gap-4 bg-gray-900 text-white rounded-2xl px-6 py-3.5 shadow-2xl shadow-gray-900/30">
             <AlertTriangle className="h-4 w-4 text-amber-400" />
-            <span className="text-sm font-medium">You have unsaved changes</span>
+            <span className="text-sm font-medium">{t('unsavedChanges')}</span>
             <button
-              onClick={() => { setHasChanges(false); toast.info("Changes discarded"); }}
+              onClick={() => { setHasChanges(false); toast.info(t('changesDiscarded')); }}
               className="text-sm font-semibold text-gray-400 hover:text-white transition-colors"
             >
-              Discard
+              {t('discard')}
             </button>
             <button
               onClick={handleSave}
               className="flex items-center gap-2 bg-white text-gray-900 rounded-xl px-4 py-2 text-sm font-bold hover:bg-gray-100 active:scale-95 transition-all"
             >
               <CheckCircle2 className="h-4 w-4" />
-              Save
+              {t('save')}
             </button>
           </div>
         </div>

@@ -6,15 +6,17 @@ import {
 import { useUserStore, useStaffStore } from "@/store";
 import { toast } from "sonner";
 import { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const StaffProfile = () => {
+    const { t, lang } = useTranslation();
     const { currentUser, logout } = useUserStore();
     const { staff } = useStaffStore();
 
     const myStaff = useMemo(() => staff.find(s => s.name === currentUser.name) || staff[0], [staff, currentUser]);
 
     const handleLogout = () => {
-        toast.info("Logging out...");
+        toast.info(t('loggingOut'));
         setTimeout(() => logout(), 500);
     };
 
@@ -31,16 +33,16 @@ const StaffProfile = () => {
                     </div>
                 </div>
                 <h2 className="mt-4 text-xl font-black text-gray-900">{currentUser.name}</h2>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Authorized Distribution Partner</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{t('authorizedPartner')}</p>
             </div>
 
             {/* Info List */}
             <div className="space-y-2">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">IDENTITY & STATUS</h3>
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">{t('identityStatus')}</h3>
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                     {[
-                        { icon: Phone, label: "Phone Number", value: myStaff.phone },
-                        { icon: Shield, label: "Shift Status", value: "Active (On-Duty)", active: true },
+                        { icon: Phone, label: t('phoneNumber'), value: myStaff.phone },
+                        { icon: Shield, label: t('shiftStatus'), value: t('activeOnDuty'), active: true },
                     ].map((item, i, arr) => (
                         <div key={item.label} className={`flex items-center justify-between p-4 ${i !== arr.length - 1 ? 'border-b border-gray-50' : ''}`}>
                             <div className="flex items-center gap-3">
@@ -57,13 +59,13 @@ const StaffProfile = () => {
 
             {/* Settings List */}
             <div className="space-y-2">
-                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">APP SETTINGS</h3>
+                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">{t('appSettings')}</h3>
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                     {[
-                        { icon: Bell, label: "Push Notifications", toggle: true },
-                        { icon: Moon, label: "Dark Mode", toggle: false },
-                        { icon: Globe, label: "Language", value: "English" },
-                        { icon: HelpCircle, label: "Support & Help", link: true },
+                        { icon: Bell, label: t('pushNotifications'), toggle: true },
+                        { icon: Moon, label: t('darkMode'), toggle: false },
+                        { icon: Globe, label: t('language'), value: lang === 'en' ? 'English' : 'தமிழ்' },
+                        { icon: HelpCircle, label: t('supportHelp'), link: true },
                     ].map((item, i) => (
                         <div key={item.label} className={`flex items-center justify-between p-4 ${i !== 3 ? 'border-b border-gray-50' : ''}`}>
                             <div className="flex items-center gap-3">
@@ -93,11 +95,11 @@ const StaffProfile = () => {
                 className="w-full h-14 rounded-2xl bg-red-50 text-red-600 font-black text-sm flex items-center justify-center gap-2 active:bg-red-100 transition-colors"
             >
                 <LogOut className="h-4 w-4" />
-                LOGOUT SESSION
+                {t('logoutSession')}
             </button>
 
             <p className="text-center text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                MindFleet-OS Staff App v1.0.2
+                {t('staffAppDescription')} v1.0.2
             </p>
         </div>
     );

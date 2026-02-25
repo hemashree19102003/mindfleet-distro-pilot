@@ -8,6 +8,7 @@ import { useInvoiceStore, useUserStore } from "@/store";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "sonner";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Invoices = () => {
   const [search, setSearch] = useState("");
@@ -17,6 +18,7 @@ const Invoices = () => {
 
   const { invoices } = useInvoiceStore();
   const { currentUser } = useUserStore();
+  const { t } = useTranslation();
 
   const filtered = useMemo(() => {
     return invoices.filter(i => {
@@ -36,7 +38,7 @@ const Invoices = () => {
           onClick={() => setSelectedInvoice(null)}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 transition-colors"
         >
-          ← Back to Invoice List
+          ← {t('backToInvoiceList')}
         </button>
 
         <div className="flex items-start justify-between flex-wrap gap-4">
@@ -45,18 +47,18 @@ const Invoices = () => {
               <FileText className="h-7 w-7" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Invoice {selectedInvoiceData.id}</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('invoice')} {selectedInvoiceData.id}</h2>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <span className="font-medium text-purple-600">{selectedInvoiceData.shopName}</span>
                 <span>•</span>
-                <span>Issued: {selectedInvoiceData.createdAt}</span>
+                <span>{t('issued')}: {selectedInvoiceData.createdAt}</span>
               </div>
             </div>
           </div>
           <div className="flex gap-2">
             <StatusBadge status={selectedInvoiceData.status} size="md" />
             <button className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
-              <Download className="h-4 w-4" /> Download PDF
+              <Download className="h-4 w-4" /> {t('downloadPdf')}
             </button>
             {selectedInvoiceData.status !== 'PAID' && (
               <button
@@ -65,7 +67,7 @@ const Invoices = () => {
                 }}
                 className="rounded-xl purple-gradient px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90"
               >
-                Record Payment
+                {t('recordPayment')}
               </button>
             )}
           </div>
@@ -75,15 +77,15 @@ const Invoices = () => {
           <div className="md:col-span-2 space-y-4">
             <div className="rounded-xl border border-gray-100 bg-white overflow-hidden">
               <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Itemized Breakdown</h3>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('itemizedBreakdown')}</h3>
               </div>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-50 text-left">
-                    <th className="px-4 py-3 font-semibold text-gray-600">SKU Name</th>
-                    <th className="px-4 py-3 font-semibold text-gray-600 text-center">Qty</th>
-                    <th className="px-4 py-3 font-semibold text-gray-600 text-right">Unit Price</th>
-                    <th className="px-4 py-3 font-semibold text-gray-600 text-right">Total</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600">{t('skuName')}</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 text-center">{t('qty')}</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 text-right">{t('unitPrice')}</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600 text-right">{t('total')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,14 +93,14 @@ const Invoices = () => {
                     <tr key={i} className="border-b border-gray-50 last:border-0">
                       <td className="px-4 py-3 text-gray-900 font-medium">{item.skuName}</td>
                       <td className="px-4 py-3 text-center text-gray-600">{item.qty}</td>
-                      <td className="px-4 py-3 text-right text-gray-600">₹{item.unitPrice}</td>
-                      <td className="px-4 py-3 text-right text-gray-900 font-bold">₹{item.total.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-gray-600">₹{item.unit_price}</td>
+                      <td className="px-4 py-3 text-right text-gray-900 font-bold">₹{item.line_total.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr className="bg-purple-50/50 font-bold text-lg">
-                    <td colSpan={3} className="px-4 py-4 text-right text-gray-600">Grand Total</td>
+                    <td colSpan={3} className="px-4 py-4 text-right text-gray-600">{t('grandTotal')}</td>
                     <td className="px-4 py-4 text-right text-purple-700">₹{selectedInvoiceData.total.toLocaleString()}</td>
                   </tr>
                 </tfoot>
@@ -108,31 +110,31 @@ const Invoices = () => {
             <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-4 ai-glow">
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-4 w-4 text-purple-600" />
-                <h4 className="text-sm font-bold text-purple-900">Invoice Insights</h4>
+                <h4 className="text-sm font-bold text-purple-900">{t('invoiceInsights')}</h4>
               </div>
               <p className="text-xs text-purple-800 leading-relaxed">
-                This invoice was generated automatically based on the delivered stops in the today run.
-                The shop owner preferred digital payment last time.
-                <span className="block mt-1 font-semibold underline cursor-pointer">View Dispatch Evidence →</span>
+                {t('invoiceAutoGenerated')}
+                {" "}{t('ownerPrefersDigital')}
+                <span className="block mt-1 font-semibold underline cursor-pointer">{t('viewDispatchEvidence')} →</span>
               </p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="rounded-xl border border-gray-100 bg-white p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-4">Payment Summary</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('paymentSummary')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500">Total Amount</span>
+                  <span className="text-gray-500">{t('totalAmount')}</span>
                   <span className="font-semibold text-gray-900">₹{selectedInvoiceData.total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500">Paid Amount</span>
+                  <span className="text-gray-500">{t('paidAmount')}</span>
                   <span className="font-semibold text-green-600">₹{selectedInvoiceData.paid.toLocaleString()}</span>
                 </div>
                 <div className="h-px bg-gray-100" />
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-900">Outstanding</span>
+                  <span className="text-sm font-bold text-gray-900">{t('outstanding')}</span>
                   <span className="text-sm font-bold text-red-600">₹{selectedInvoiceData.outstanding.toLocaleString()}</span>
                 </div>
               </div>
@@ -143,6 +145,7 @@ const Invoices = () => {
           <PaymentModal
             invoice={selectedInvoiceData}
             onClose={() => setPaymentModal({ open: false, invoiceId: "" })}
+            t={t}
           />
         )}
       </div>
@@ -153,25 +156,25 @@ const Invoices = () => {
     <div className="space-y-5 pb-10">
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Invoices & Payments</h1>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('invoicesAndPayments')}</h1>
           <p className="text-sm text-gray-500">Managing {invoices.length} invoices · ₹8.2L outstanding</p>
         </div>
         <div className="ml-auto flex gap-2">
           <button className="flex h-10 items-center gap-2 rounded-xl border border-purple-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-purple-50 transition-all">
-            <Download className="h-4 w-4" /> REPORTS
+            <Download className="h-4 w-4" /> {t('reports')}
           </button>
           <button className="flex h-10 items-center gap-2 rounded-xl purple-gradient px-4 text-xs font-bold text-white shadow-lg shadow-purple-200 hover:opacity-90 transition-all">
-            <Sparkles className="h-4 w-4" /> GENERATE BATCH
+            <Sparkles className="h-4 w-4" /> {t('generateBatch')}
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Revenue", value: "₹24.5L", icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "Paid", value: "₹16.3L", icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Outstanding", value: "₹8.2L", icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50" },
-          { label: "Overdue", value: "14", icon: Clock, color: "text-red-500", bg: "bg-red-50" },
+          { label: t('totalRevenue'), value: "₹24.5L", icon: IndianRupee, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: t('paid'), value: "₹16.3L", icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
+          { label: t('outstanding'), value: "₹8.2L", icon: AlertTriangle, color: "text-yellow-600", bg: "bg-yellow-50" },
+          { label: t('overdue'), value: "14", icon: Clock, color: "text-red-500", bg: "bg-red-50" },
         ].map(item => (
           <div key={item.label} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.bg} ${item.color} mb-3`}>
@@ -190,7 +193,7 @@ const Invoices = () => {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search invoice ID, shop name, or ID…"
+            placeholder={t('searchInvoice')}
             className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
           />
         </div>
@@ -201,7 +204,7 @@ const Invoices = () => {
               onClick={() => setStatusFilter(s)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${statusFilter === s ? 'purple-gradient text-white shadow-md shadow-purple-100' : 'text-gray-400 hover:text-gray-700'}`}
             >
-              {s === 'All' ? 'All Invoices' : s}
+              {s === 'All' ? t('allInvoices') : s}
             </button>
           ))}
         </div>
@@ -212,12 +215,12 @@ const Invoices = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50 text-left">
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice ID</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Shop Details</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Paid</th>
-                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Outstanding</th>
-                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('invoiceId')}</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('shopDetails')}</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('total')}</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('paid')}</th>
+                <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('outstanding')}</th>
+                <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('status')}</th>
                 <th className="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-16"></th>
               </tr>
             </thead>
@@ -249,7 +252,7 @@ const Invoices = () => {
         </div>
         {filtered.length === 0 && (
           <div className="py-20 text-center">
-            <EmptyState icon={FileText} title="No matching invoices found" />
+            <EmptyState icon={FileText} title={t('noInvoicesFound')} />
           </div>
         )}
       </div>
@@ -258,13 +261,14 @@ const Invoices = () => {
         <PaymentModal
           invoice={invoices.find(i => i.id === paymentModal.invoiceId)!}
           onClose={() => setPaymentModal({ open: false, invoiceId: "" })}
+          t={t}
         />
       )}
     </div>
   );
 };
 
-const PaymentModal = ({ invoice, onClose }: { invoice: any, onClose: () => void }) => {
+const PaymentModal = ({ invoice, onClose, t }: { invoice: any, onClose: () => void, t: any }) => {
   const [amount, setAmount] = useState(invoice.outstanding);
   const [method, setMethod] = useState("Cash");
 
@@ -290,14 +294,14 @@ const PaymentModal = ({ invoice, onClose }: { invoice: any, onClose: () => void 
             <CreditCard className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-gray-900">Record Payment</h2>
+            <h2 className="text-xl font-black text-gray-900">{t('recordPayment')}</h2>
             <p className="text-xs text-gray-500">Inv #{invoice.id} · {invoice.shopName}</p>
           </div>
         </div>
 
         <div className="space-y-6">
           <div>
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Payment Method</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">{t('paymentMethod')}</label>
             <div className="grid grid-cols-3 gap-2">
               {["Cash", "UPI", "Bank"].map(m => (
                 <button
@@ -312,7 +316,7 @@ const PaymentModal = ({ invoice, onClose }: { invoice: any, onClose: () => void 
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">Amount (Outstanding ₹{invoice.outstanding.toLocaleString()})</label>
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5">{t('amount')} ({t('outstanding')} ₹{invoice.outstanding.toLocaleString()})</label>
             <div className="relative">
               <span className="absolute left-4 top-3.5 text-gray-400 font-bold">₹</span>
               <input
@@ -333,13 +337,13 @@ const PaymentModal = ({ invoice, onClose }: { invoice: any, onClose: () => void 
             onClick={onClose}
             className="flex-1 h-12 rounded-xl border border-gray-100 text-sm font-bold text-gray-400 hover:bg-gray-50 transition-all font-black uppercase tracking-widest"
           >
-            CANCEL
+            {t('cancel')}
           </button>
           <button
             type="submit"
             className="flex-1 h-12 rounded-xl purple-gradient text-sm font-bold text-white shadow-lg shadow-purple-200 transition-all hover:opacity-90 active:scale-95 font-black uppercase tracking-widest"
           >
-            CONFIRM
+            {t('confirm')}
           </button>
         </div>
       </form>

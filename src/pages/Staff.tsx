@@ -5,6 +5,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import { toast } from "sonner";
 import { createDraftFromAI } from "@/data/generators";
+import { useTranslation } from "@/hooks/useTranslation";
 
 import StaffList from "@/components/staff/StaffList";
 import CapacityEditor from "@/components/staff/CapacityEditor";
@@ -22,6 +23,7 @@ const Staff = () => {
   const { shops } = useShopStore();
   const { currentUser } = useUserStore();
   const { addDraft } = useDraftStore();
+  const { t } = useTranslation();
 
   const filtered = useMemo(() => {
     return staff.filter(s => {
@@ -39,9 +41,9 @@ const Staff = () => {
 
   const handleDeactivate = (id: string, name: string) => {
     const draft = createDraftFromAI('STAFF_UPDATE', currentUser.name);
-    draft.description = `Deactivate staff ${name} and reassign their 12 stops`;
+    draft.description = `${t('deactivateStaff')} ${name} ${t('andReassignStops')}`;
     addDraft(draft);
-    toast.success("Deactivation draft created — AI rebalancing stops");
+    toast.success(t('deactivationDraftCreated'));
   };
 
   return (
@@ -49,18 +51,18 @@ const Staff = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Staff</h1>
-          <p className="text-sm text-gray-500">{staff.length} staff · {staff.filter(s => s.status === 'Active').length} active</p>
+          <h1 className="text-xl font-bold text-gray-900">{t('staffTitle')}</h1>
+          <p className="text-sm text-gray-500">{staff.length} {t('staffTitle').toLowerCase()} · {staff.filter(s => s.status === 'Active').length} {t('active').toLowerCase()}</p>
         </div>
         <div className="ml-auto flex gap-2">
           <button className="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100 transition-all">
-            <Users className="h-4 w-4" /> Rosters
+            <Users className="h-4 w-4" /> {t('rosters')}
           </button>
           <button
             onClick={() => setIsAddStaffOpen(true)}
             className="rounded-xl purple-gradient px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
           >
-            <Plus className="h-4 w-4 mr-1 inline-block" /> Add Staff
+            <Plus className="h-4 w-4 mr-1 inline-block" /> {t('addStaff')}
           </button>
         </div>
       </div>
@@ -68,10 +70,10 @@ const Staff = () => {
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "Total Staff", value: staff.length, icon: Users, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "Active", value: staff.filter(s => s.status === 'Active').length, icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "On Leave", value: staff.filter(s => s.status === 'On Leave').length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
-          { label: "At Risk", value: staff.filter(s => s.risk).length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: t('totalStaff'), value: staff.length, icon: Users, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: t('active'), value: staff.filter(s => s.status === 'Active').length, icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: t('onLeaveLabel'), value: staff.filter(s => s.status === 'On Leave').length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
+          { label: t('atRisk'), value: staff.filter(s => s.risk).length, icon: AlertTriangle, color: "text-purple-600", bg: "bg-purple-0" },
         ].map(item => (
           <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.bg} ${item.color} mb-2`}>
@@ -91,7 +93,7 @@ const Staff = () => {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search staff by name…"
+            placeholder={t('searchStaff')}
             className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
           />
         </div>
@@ -103,7 +105,7 @@ const Staff = () => {
               className={`px-3 py-2 text-xs font-medium transition-colors ${statusFilter === f ? 'bg-purple-600 text-white' : 'text-gray-500 hover:bg-gray-50'
                 }`}
             >
-              {f === 'all' ? 'All' : f}
+              {f === 'all' ? t('allShops').split(' ')[0] : (f === 'On Leave' ? t('onLeaveLabel') : t(f.toLowerCase() as any))}
             </button>
           ))}
         </div>
@@ -113,7 +115,7 @@ const Staff = () => {
         {/* Staff List */}
         <div className="lg:col-span-2 space-y-3">
           {filtered.length === 0 ? (
-            <EmptyState icon={Users} title="No staff found" />
+            <EmptyState icon={Users} title={t('noStaffFound')} />
           ) : (
             <StaffList
               staff={filtered}
@@ -140,7 +142,7 @@ const Staff = () => {
               <button
                 onClick={() => handleDeactivate(selectedStaffData.id, selectedStaffData.name)}
                 className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                title="Deactivate Staff"
+                title={t('deactivateStaff')}
               >
                 <UserMinus className="h-5 w-5" />
               </button>
@@ -148,10 +150,10 @@ const Staff = () => {
 
             <div className="space-y-2">
               {[
-                { label: "Phone", value: selectedStaffData.phone },
-                { label: "Capacity", value: `${selectedStaffData.capacity} stops` },
-                { label: "Distance", value: selectedStaffData.distance },
-                { label: "Performance", value: `${selectedStaffData.performance}%` },
+                { label: t('phone'), value: selectedStaffData.phone },
+                { label: t('capacity'), value: `${selectedStaffData.capacity} ${t('stops')}` },
+                { label: t('distance'), value: selectedStaffData.distance },
+                { label: t('performance'), value: `${selectedStaffData.performance}%` },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-gray-50">
                   <span className="text-xs text-gray-500">{item.label}</span>
@@ -162,7 +164,7 @@ const Staff = () => {
 
             <div>
               <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                Assigned Shops ({assignedShops.length})
+                {t('assignedShops')} ({assignedShops.length})
               </h4>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {assignedShops.slice(0, 10).map(shop => (
@@ -175,7 +177,7 @@ const Staff = () => {
                   </div>
                 ))}
                 {assignedShops.length > 10 && (
-                  <p className="text-xs text-gray-400 text-center">+{assignedShops.length - 10} more</p>
+                  <p className="text-xs text-gray-400 text-center">+{assignedShops.length - 10} {t('more')}</p>
                 )}
               </div>
             </div>
@@ -184,13 +186,13 @@ const Staff = () => {
               onClick={() => setIsCapacityEditorOpen(true)}
               className="w-full rounded-xl border border-purple-200 bg-white py-2 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
             >
-              Edit Capacity
+              {t('editCapacity')}
             </button>
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 flex flex-col items-center justify-center text-center h-fit">
             <Users className="h-10 w-10 text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400">Select a staff member to view details</p>
+            <p className="text-sm text-gray-400">{t('selectStaffToView')}</p>
           </div>
         )}
       </div>

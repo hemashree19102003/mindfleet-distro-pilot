@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Truck, AlertTriangle, CheckCircle, Package, Map as MapIcon, Maximize2, RotateCcw } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Fix Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -50,17 +51,18 @@ const CHENNAI_CENTER: [number, number] = [13.0827, 80.2707];
 const FleetLiveMap = () => {
     const [staffPositions, setStaffPositions] = useState<any[]>([]);
     const [map, setMap] = useState<L.Map | null>(null);
+    const { t } = useTranslation();
 
     // Initial Positions
     useEffect(() => {
         const initial = Array.from({ length: 12 }).map((_, i) => ({
             id: `s${i + 1}`,
-            name: `Rider ${i + 1}`,
+            name: `${t('rider')} ${i + 1}`,
             lat: CHENNAI_CENTER[0] + (Math.random() - 0.5) * 0.05,
             lng: CHENNAI_CENTER[1] + (Math.random() - 0.5) * 0.05,
             status: Math.random() > 0.8 ? 'Delayed' : 'Active',
             battery: Math.floor(Math.random() * 40 + 60),
-            task: "Delivering to Shop #" + Math.floor(Math.random() * 100),
+            task: `${t('deliveringTo')} ${t('mockShopPrefix')} #${Math.floor(Math.random() * 100)}`,
         }));
         setStaffPositions(initial);
     }, []);
@@ -107,14 +109,14 @@ const FleetLiveMap = () => {
                             <div className="p-2 min-w-[150px]">
                                 <p className="text-xs font-black text-gray-900 mb-1">{staff.name}</p>
                                 <div className="flex items-center gap-1.5 mb-2">
-                                    <span className={`h-1.5 w-1.5 rounded-full ${staff.status === 'Delayed' ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
-                                    <span className="text-[10px] font-bold text-gray-500 uppercase">{staff.status}</span>
+                                    <span className={`h-1.5 w-1.5 rounded-full ${staffPositions.find(p => p.id === staff.id)?.status === 'Delayed' ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+                                    <span className="text-[10px] font-bold text-gray-500 uppercase">{t(staff.status.toUpperCase() as any) || staff.status}</span>
                                 </div>
                                 <div className="space-y-1 border-t pt-2 border-gray-100">
                                     <p className="text-[10px] text-gray-600 font-medium flex items-center gap-1">
                                         <Package className="h-3 w-3" /> {staff.task}
                                     </p>
-                                    <p className="text-[10px] text-gray-400">Battery: {staff.battery}%</p>
+                                    <p className="text-[10px] text-gray-400">{t('batteryLabel')}: {staff.battery}%</p>
                                 </div>
                             </div>
                         </Popup>
@@ -126,24 +128,24 @@ const FleetLiveMap = () => {
             <div className="absolute top-4 left-4 z-[1000] pointer-events-none">
                 <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-purple-100 shadow-xl pointer-events-auto">
                     <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <MapIcon className="h-3 w-3 text-purple-600" /> Map Controls
+                        <MapIcon className="h-3 w-3 text-purple-600" /> {t('mapControls')}
                     </h4>
                     <div className="space-y-3">
                         <div className="flex items-center justify-between gap-8">
                             <div className="flex items-center gap-2 text-[11px] font-bold text-gray-700">
-                                <div className="h-2.5 w-2.5 rounded-full bg-purple-500" /> Pending Shops
+                                <div className="h-2.5 w-2.5 rounded-full bg-purple-500" /> {t('pendingShops')}
                             </div>
                             <span className="text-xs font-black text-gray-900">116</span>
                         </div>
                         <div className="flex items-center justify-between gap-8">
                             <div className="flex items-center gap-2 text-[11px] font-bold text-gray-700">
-                                <div className="h-2.5 w-2.5 rounded-full bg-green-500" /> Delivered
+                                <div className="h-2.5 w-2.5 rounded-full bg-green-500" /> {t('deliveredStatus')}
                             </div>
                             <span className="text-xs font-black text-gray-900">312</span>
                         </div>
                         <div className="flex items-center justify-between gap-8">
                             <div className="flex items-center gap-2 text-[11px] font-bold text-gray-700">
-                                <div className="h-2.5 w-2.5 rounded-full bg-red-500" /> Sla Risk
+                                <div className="h-2.5 w-2.5 rounded-full bg-red-500" /> {t('slaRiskLabel')}
                             </div>
                             <span className="text-xs font-black text-red-600 animate-pulse">4</span>
                         </div>
@@ -159,10 +161,10 @@ const FleetLiveMap = () => {
                             <Truck className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-black text-gray-900">12 Staff Active</p>
+                            <p className="text-sm font-black text-gray-900">12 {t('staffActiveLabel')}</p>
                             <p className="text-[10px] text-gray-500 flex items-center gap-1.5">
                                 <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                                Live GPS tracking active • Chennai North
+                                {t('liveGpsActive')} • {t('chennaiNorth')}
                             </p>
                         </div>
                     </div>
@@ -170,7 +172,7 @@ const FleetLiveMap = () => {
                         <button
                             onClick={resetView}
                             className="p-2.5 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 text-gray-500 transition-all active:scale-95"
-                            title="Recenter"
+                            title={t('reCenter')}
                         >
                             <RotateCcw className="h-4 w-4" />
                         </button>

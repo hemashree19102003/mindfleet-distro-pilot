@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Tag } from 'lucide-react';
+import { useTranslation } from "@/hooks/useTranslation";
 
 const REASON_TAGS = [
     'CAPACITY',
@@ -19,6 +20,7 @@ interface Props {
 const ReasonTagModal = ({ open, title, onSubmit, onCancel }: Props) => {
     const [selected, setSelected] = useState('');
     const [custom, setCustom] = useState('');
+    const { t } = useTranslation();
 
     if (!open) return null;
 
@@ -44,7 +46,7 @@ const ReasonTagModal = ({ open, title, onSubmit, onCancel }: Props) => {
                     </button>
                 </div>
                 <div className="p-6">
-                    <p className="text-sm text-gray-600 mb-4">Select a reason tag (required for this action):</p>
+                    <p className="text-sm text-gray-600 mb-4">{t('selectReasonTag')}</p>
                     <div className="flex flex-wrap gap-2 mb-4">
                         {REASON_TAGS.map(tag => (
                             <button
@@ -55,7 +57,7 @@ const ReasonTagModal = ({ open, title, onSubmit, onCancel }: Props) => {
                                     : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700'
                                     }`}
                             >
-                                {tag}
+                                {t(tag as any) || tag}
                             </button>
                         ))}
                     </div>
@@ -74,14 +76,14 @@ const ReasonTagModal = ({ open, title, onSubmit, onCancel }: Props) => {
                         onClick={onCancel}
                         className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
                     >
-                        Cancel
+                        {t('cancelAction')}
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={!selected || (selected === 'Other' && !custom.trim())}
                         className="flex-1 rounded-xl bg-purple-600 py-2.5 text-sm font-medium text-white transition-all hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Confirm
+                        {t('confirmAction')}
                     </button>
                 </div>
             </div>

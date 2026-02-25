@@ -13,11 +13,13 @@ import ShopProfile from "@/components/shops/ShopProfile";
 import CSVImportWizard from "@/components/shared/CSVImportWizard";
 import GeoFixModal from "@/components/shops/GeoFixModal";
 import { createDraftFromAI } from "@/data/generators";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Shops = () => {
   const { shops } = useShopStore();
   const { addDraft } = useDraftStore();
   const { currentUser } = useUserStore();
+  const { t } = useTranslation();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
@@ -84,18 +86,18 @@ const Shops = () => {
   const handleNewShop = () => {
     const draft = createDraftFromAI('SHOP_IMPORT', currentUser.name);
     addDraft(draft);
-    toast.success("New Shop Onboarding drafted by AI", {
-      description: "Review details in the Decision Journal",
+    toast.success(t('newShopDrafted'), {
+      description: t('reviewInJournal'),
       action: {
-        label: "OPEN JOURNAL",
-        onClick: () => (window as any).dispatchJournalEvent?.() || toast.info("Check the Journal history icon")
+        label: t('openJournal'),
+        onClick: () => (window as any).dispatchJournalEvent?.() || toast.info(t('checkJournalIcon'))
       }
     });
   };
 
   const handleImport = (data: any[]) => {
     const draft = createDraftFromAI('SHOP_UPDATE', currentUser.name);
-    draft.description = `Bulk Import ${data.length} Shops via CSV`;
+    draft.description = `${t('bulkImportShopsDesc').replace('{{count}}', String(data.length))}`;
     draft.payload = { count: data.length, firstRecord: data[0] };
     addDraft(draft);
   };
@@ -104,24 +106,24 @@ const Shops = () => {
     <div className="space-y-6 animate-fade-in pb-10 relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Shop Network</h1>
-          <p className="text-sm text-gray-500">Manage {shops.length} retail partners and geo-coordinates</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('shopNetwork')}</h1>
+          <p className="text-sm text-gray-500">{t('managePartners')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsImportOpen(true)}
             className="flex h-10 items-center gap-2 rounded-xl border border-gray-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all active:scale-95"
           >
-            <FileInput className="h-4 w-4" /> IMPORT
+            <FileInput className="h-4 w-4" /> {t('import')}
           </button>
           <button className="flex h-10 items-center gap-2 rounded-xl border border-gray-100 bg-white px-4 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-all active:scale-95">
-            <FileDown className="h-4 w-4" /> EXPORT
+            <FileDown className="h-4 w-4" /> {t('export')}
           </button>
           <button
             onClick={handleNewShop}
             className="flex h-10 items-center gap-2 rounded-xl purple-gradient px-4 text-xs font-bold text-white shadow-lg shadow-purple-200 hover:opacity-90 transition-all active:scale-95"
           >
-            <Plus className="h-4 w-4" /> ADD SHOP
+            <Plus className="h-4 w-4" /> {t('addShop')}
           </button>
         </div>
       </div>
@@ -129,23 +131,23 @@ const Shops = () => {
       {stats.pendingGeo > 0 && (
         <RiskBanner
           severity="destructive"
-          title={`${stats.pendingGeo} Shops Missing Geo-Coordinates`}
-          description="These shops cannot be included in AI dispatch plans until fixed."
-          actionLabel="FIX LOCATIONS"
+          title={`${stats.pendingGeo} ${t('missingGeo')}`}
+          description={t('missingGeoWarning')}
+          actionLabel={t('fixLocations')}
           onAction={handleBatchGeoFix}
         />
       )}
 
       <FilterBar
-        searchPlaceholder="Search by name, area, or ID..."
+        searchPlaceholder={t('searchPlaceholder')}
         initialSearch={searchTerm}
         onSearch={updateSearch}
         activeFilter={activeFilter}
         onFilterChange={updateFilter}
         options={[
-          { id: 'all', label: 'All Shops', count: stats.total },
-          { id: 'pending', label: 'Missing Geo', count: stats.pendingGeo },
-          { id: 'premium', label: 'High Credit', count: 12 },
+          { id: 'all', label: t('allShops'), count: stats.total },
+          { id: 'pending', label: t('missingGeo'), count: stats.pendingGeo },
+          { id: 'premium', label: t('highCredit'), count: 12 },
         ]}
         rightElement={
           <div className="flex rounded-xl border border-gray-100 bg-white p-0.5 ml-2">
@@ -190,18 +192,18 @@ const Shops = () => {
 
               <div className="space-y-3 border-t border-gray-50 pt-4">
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-gray-400 font-medium">Outstanding</span>
+                  <span className="text-gray-400 font-medium">{t('outstanding')}</span>
                   {/* Fixed formatting for mock data */}
                   <span className="font-black text-gray-900">₹{shop.balance.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-gray-400 font-medium">Last Visit</span>
+                  <span className="text-gray-400 font-medium">{t('lastVisit')}</span>
                   <span className="font-bold text-gray-600">Yesterday</span>
                 </div>
               </div>
 
               <button className="w-full mt-5 py-2.5 rounded-xl border border-purple-100 text-[10px] font-black text-purple-600 uppercase tracking-widest hover:bg-purple-50 transition-all">
-                VIEW HISTORY
+                {t('viewHistory')}
               </button>
             </div>
           ))}

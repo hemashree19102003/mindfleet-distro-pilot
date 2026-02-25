@@ -6,6 +6,7 @@ import StatusBadge from './StatusBadge';
 import ReasonTagModal from './ReasonTagModal';
 import ConfirmModal from './ConfirmModal';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
     draft: DraftCardType;
@@ -21,6 +22,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
     const [isExpanded, setIsExpanded] = useState(draft.status !== 'EXECUTED');
     const { updateDraftStatus } = useDraftStore();
     const { currentUser } = useUserStore();
+    const { t } = useTranslation();
 
     // Auto-collapse on execution
     useEffect(() => {
@@ -70,10 +72,10 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                     </div>
                     <div className="flex-1">
                         <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900">{draft.title}</h3>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 bg-green-100 px-2 py-1 rounded-full">Executed</span>
+                            <h3 className="font-semibold text-gray-900">{t(draft.title as any) || draft.title}</h3>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-green-600 bg-green-100 px-2 py-1 rounded-full">{t('EXECUTED')}</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">Action completed successfully. Click to view details.</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('actionCompleted')}. {t('clickToViewDetails')}.</p>
                     </div>
                     <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
                 </div>
@@ -93,10 +95,10 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-gray-900 truncate">{draft.title}</p>
+                            <p className="text-sm font-semibold text-gray-900 truncate">{t(draft.title as any) || draft.title}</p>
                             <StatusBadge status={draft.status} />
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{draft.description}</p>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{t(draft.description as any) || draft.description}</p>
                         <div className="flex items-center gap-2 mt-2">
                             {isPending && (
                                 <>
@@ -104,13 +106,13 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                         onClick={() => setShowConfirmApprove(true)}
                                         className="rounded-lg bg-purple-600 px-3 py-1 text-[10px] font-semibold text-white transition-all hover:bg-purple-700 hover:shadow-sm"
                                     >
-                                        Approve
+                                        {t('approveLabel')}
                                     </button>
                                     <button
                                         onClick={() => setShowRejectModal(true)}
                                         className="rounded-lg border border-red-200 px-3 py-1 text-[10px] font-semibold text-red-500 transition-all hover:bg-red-50"
                                     >
-                                        Reject
+                                        {t('rejectLabel')}
                                     </button>
                                 </>
                             )}
@@ -119,13 +121,13 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                 </div>
                 <ReasonTagModal
                     open={showConfirmApprove}
-                    title="Approve Draft"
+                    title={t('approveDraft')}
                     onSubmit={handleApprove}
                     onCancel={() => setShowConfirmApprove(false)}
                 />
                 <ReasonTagModal
                     open={showRejectModal}
-                    title="Reject Draft"
+                    title={t('rejectDraft')}
                     onSubmit={handleReject}
                     onCancel={() => setShowRejectModal(false)}
                 />
@@ -143,16 +145,16 @@ const DraftCard = ({ draft, compact = false }: Props) => {
             {/* Header */}
             <div className="flex items-center gap-2 mb-5 flex-wrap">
                 <Sparkles className="h-4 w-4 text-purple-600 shrink-0" />
-                <h3 className="font-semibold text-gray-900 flex-1">{draft.title}</h3>
+                <h3 className="font-semibold text-gray-900 flex-1">{t(draft.title as any) || draft.title}</h3>
                 <StatusBadge status={draft.status} />
             </div>
 
             {/* Description */}
-            <p className="text-sm text-gray-600 mb-4">{draft.description}</p>
+            <p className="text-sm text-gray-600 mb-4">{t(draft.description as any) || draft.description}</p>
 
             {/* Confidence */}
             <div className="flex items-center gap-3 mb-4">
-                <span className="text-xs font-medium text-gray-500">Confidence</span>
+                <span className="text-xs font-medium text-gray-500">{t('confidenceLabel')}</span>
                 <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
                     <div
                         className="h-full rounded-full bg-gradient-to-r from-purple-500 to-purple-700 transition-all duration-700"
@@ -169,20 +171,20 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                 <div className="mb-4 space-y-4 rounded-2xl bg-white border border-purple-100 p-5 shadow-sm animate-in slide-in-from-top-2">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">Onboarding Form Required</span>
+                        <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest">{t('onboardingFormRequired')}</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Full Name</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{t('fullName')}</label>
                             <input type="text" className="w-full rounded-xl border border-gray-100 bg-gray-50/50 px-3 py-2 text-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-50 outline-none transition-all" placeholder="e.g. Rahul S." />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Contact Number</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{t('contactNumber')}</label>
                             <input type="text" className="w-full rounded-xl border border-gray-100 bg-gray-50/50 px-3 py-2 text-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-50 outline-none transition-all" placeholder="+91 XXXXX XXXXX" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Assigned Zone</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{t('assignedZone')}</label>
                             <select className="w-full rounded-xl border border-gray-100 bg-gray-50/50 px-3 py-2 text-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-50 outline-none transition-all bg-white cursor-pointer">
                                 <option>Zone A (Anna Nagar)</option>
                                 <option>Zone B (Adyar)</option>
@@ -191,7 +193,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Vehicle Type</label>
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{t('vehicleType')}</label>
                             <select className="w-full rounded-xl border border-gray-100 bg-gray-50/50 px-3 py-2 text-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-50 outline-none transition-all bg-white cursor-pointer">
                                 <option>Electric Bike</option>
                                 <option>Regular Bike</option>
@@ -207,8 +209,8 @@ const DraftCard = ({ draft, compact = false }: Props) => {
             {draft.type === 'SHOP_IMPORT' && (
                 <div className="mb-4 rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm animate-in slide-in-from-top-2">
                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Preview: New Accounts</span>
-                        <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">42 PENDING</span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('previewNewAccounts')}</span>
+                        <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">42 {t('PENDING')}</span>
                     </div>
                     <div className="p-3 space-y-2 max-h-48 overflow-y-auto">
                         {[
@@ -227,13 +229,13 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[9px] font-black text-purple-500 uppercase">Geo Score</p>
+                                    <p className="text-[9px] font-black text-purple-500 uppercase">{t('geoScore')}</p>
                                     <p className="text-xs font-black text-gray-900">{shop.geo}%</p>
                                 </div>
                             </div>
                         ))}
                         <div className="py-2 text-center">
-                            <button className="text-[10px] font-bold text-purple-600 hover:underline">View all 42 shops...</button>
+                            <button className="text-[10px] font-bold text-purple-600 hover:underline">{t('viewLabel')} all 42 shops...</button>
                         </div>
                     </div>
                 </div>
@@ -247,7 +249,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                         className="flex items-center gap-1.5 text-xs font-bold text-purple-600 hover:text-purple-700 transition-colors bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-100"
                     >
                         <Sparkles className="h-3.5 w-3.5" />
-                        Why?
+                        {t('why')}
                         {showExplanation ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                     </button>
                     {showExplanation && (
@@ -280,7 +282,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                                     ) : (
                                                         <Sparkles className="h-3 w-3" />
                                                     )}
-                                                    {tag.text}
+                                                    {t(tag.text as any) || tag.text}
                                                 </span>
                                             ))}
                                             {hasHidden && (
@@ -288,7 +290,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                                     onClick={(e) => { e.stopPropagation(); setShowAllTags(!showAllTags); }}
                                                     className="text-[10px] font-bold text-gray-400 hover:text-gray-600 underline decoration-dotted"
                                                 >
-                                                    {showAllTags ? "Show Less" : `+${allTags.length - 5} more`}
+                                                    {showAllTags ? t('showLess') : `+${allTags.length - 5} ${t('more')}`}
                                                 </button>
                                             )}
                                         </>
@@ -305,7 +307,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                                 'bg-blue-50 text-blue-700'
                                             }`}>
                                             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                            <span className="text-[10px] leading-tight font-medium line-clamp-2">{r.text}</span>
+                                            <span className="text-[10px] leading-tight font-medium line-clamp-2">{t(r.text as any) || r.text}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -341,11 +343,11 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                 <div className="mb-4 rounded-xl border border-gray-200 overflow-hidden">
                     <div className="grid grid-cols-2 divide-x divide-gray-200">
                         <div className="p-3 bg-red-50">
-                            <p className="text-[10px] font-semibold text-red-500 mb-1">BEFORE</p>
+                            <p className="text-[10px] font-semibold text-red-500 mb-1">{t('before')}</p>
                             <pre className="text-xs text-gray-700 whitespace-pre-wrap">{JSON.stringify(draft.diff.before, null, 2)}</pre>
                         </div>
                         <div className="p-3 bg-green-50">
-                            <p className="text-[10px] font-semibold text-green-600 mb-1">AFTER</p>
+                            <p className="text-[10px] font-semibold text-green-600 mb-1">{t('after')}</p>
                             <pre className="text-xs text-gray-700 whitespace-pre-wrap">{JSON.stringify(draft.diff.after, null, 2)}</pre>
                         </div>
                     </div>
@@ -360,23 +362,23 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                             onClick={() => setShowPlanModal(true)}
                             className="flex items-center gap-1.5 rounded-xl border border-purple-300 bg-white px-5 py-2.5 text-sm font-medium text-purple-700 transition-all hover:bg-purple-50 hover:-translate-y-0.5"
                         >
-                            <Edit3 className="h-3.5 w-3.5" /> View Plan
+                            <Edit3 className="h-3.5 w-3.5" /> {t('viewPlan')}
                         </button>
                     )}
                     <button
                         onClick={() => setShowConfirmApprove(true)}
                         className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-purple-700 hover:-translate-y-0.5 hover:shadow-md"
                     >
-                        <CheckCircle className="h-3.5 w-3.5" /> Approve
+                        <CheckCircle className="h-3.5 w-3.5" /> {t('approveLabel')}
                     </button>
                     <button className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 hover:-translate-y-0.5">
-                        <Edit3 className="h-3.5 w-3.5" /> Edit
+                        <Edit3 className="h-3.5 w-3.5" /> {t('editLabel')}
                     </button>
                     <button
                         onClick={() => setShowRejectModal(true)}
                         className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:text-red-600 hover:bg-red-50"
                     >
-                        <XCircle className="h-3.5 w-3.5" /> Reject
+                        <XCircle className="h-3.5 w-3.5" /> {t('rejectLabel')}
                     </button>
                 </div>
             )}
@@ -386,18 +388,18 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                 <div className="flex flex-wrap gap-2 animate-fade-in">
                     <button
                         onClick={() => {
-                            updateDraftStatus(draft.id, 'EXECUTED');
-                            toast.success(`Draft "${draft.title}" executed successfully!`);
+                            updateDraftStatus(draft.id, 'EXECUTED', currentUser.name);
+                            toast.success(`Draft "${t(draft.title as any) || draft.title}" executed successfully!`);
                         }}
                         className="flex items-center gap-1.5 rounded-xl bg-green-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-green-700 hover:-translate-y-0.5 shadow-lg shadow-green-100"
                     >
-                        <Zap className="h-4 w-4 fill-current" /> RUN EXECUTION
+                        <Zap className="h-4 w-4 fill-current" /> {t('runExecution')}
                     </button>
                     <button
-                        onClick={() => updateDraftStatus(draft.id, 'DRAFT')}
+                        onClick={() => updateDraftStatus(draft.id, 'DRAFT', currentUser.name)}
                         className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-all"
                     >
-                        ROLLBACK TO DRAFT
+                        {t('rollbackToDraft')}
                     </button>
                 </div>
             )}
@@ -406,7 +408,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
             {isExecuted && (
                 <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-100 p-3 text-green-700 animate-fade-in">
                     <CheckCircle className="h-4 w-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Operational Change Committed</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">{t('opChangeCommitted')}</span>
                 </div>
             )}
 
@@ -417,8 +419,8 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                     <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900">Generated Dispatch Plan</h3>
-                                <p className="text-sm text-gray-500">Draft Preview · 17 Feb 2025</p>
+                                <h3 className="text-lg font-bold text-gray-900">{t('genDispatchPlan')}</h3>
+                                <p className="text-sm text-gray-500">{t('draftPreview')} · {new Date().toLocaleDateString(t('langCode' as any) === 'ta' ? 'ta-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                             </div>
                             <button onClick={() => setShowPlanModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <XCircle className="h-6 w-6" />
@@ -428,25 +430,25 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                             {/* Summary Stats */}
                             <div className="grid grid-cols-4 gap-4 mb-6">
                                 <div className="rounded-xl border border-purple-100 bg-purple-50 p-3 text-center">
-                                    <p className="text-xs text-gray-500 uppercase">Stops</p>
+                                    <p className="text-xs text-gray-500 uppercase">{t('stopsUppercaseLabel')}</p>
                                     <p className="text-xl font-bold text-purple-700">{mockPlanDetails.summary.stops}</p>
                                 </div>
                                 <div className="rounded-xl border border-purple-100 bg-purple-50 p-3 text-center">
-                                    <p className="text-xs text-gray-500 uppercase">Revenue</p>
+                                    <p className="text-xs text-gray-500 uppercase">{t('revenueLabel')}</p>
                                     <p className="text-xl font-bold text-purple-700">₹{(mockPlanDetails.summary.revenue / 1000).toFixed(1)}k</p>
                                 </div>
                                 <div className="rounded-xl border border-purple-100 bg-purple-50 p-3 text-center">
-                                    <p className="text-xs text-gray-500 uppercase">Vehicles</p>
+                                    <p className="text-xs text-gray-500 uppercase">{t('staffActiveLabel2')}</p>
                                     <p className="text-xl font-bold text-purple-700">{mockPlanDetails.summary.vehicles}</p>
                                 </div>
                                 <div className="rounded-xl border border-purple-100 bg-purple-50 p-3 text-center">
-                                    <p className="text-xs text-gray-500 uppercase">Efficiency</p>
+                                    <p className="text-xs text-gray-500 uppercase">{t('efficiencyLabel')}</p>
                                     <p className="text-xl font-bold text-purple-700">{mockPlanDetails.summary.efficiency}%</p>
                                 </div>
                             </div>
 
                             {/* Routes List */}
-                            <h4 className="font-semibold text-gray-900 mb-3">Proposed Routes</h4>
+                            <h4 className="font-semibold text-gray-900 mb-3">{t('proposedRoutes')}</h4>
                             <div className="space-y-3">
                                 {mockPlanDetails.routes.map((route, i) => (
                                     <div key={i} className="flex items-center justify-between rounded-xl border border-gray-100 p-3 hover:bg-gray-50 transition-colors">
@@ -460,7 +462,7 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-medium text-gray-900">{route.stops} stops</p>
+                                            <p className="text-sm font-medium text-gray-900">{route.stops} {t('stops')}</p>
                                             <p className="text-xs text-gray-500">{route.time}</p>
                                         </div>
                                     </div>
@@ -475,13 +477,13 @@ const DraftCard = ({ draft, compact = false }: Props) => {
                                 onClick={() => setShowPlanModal(false)}
                                 className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
-                                Close Preview
+                                {t('closePreview')}
                             </button>
                             <button
                                 onClick={() => { setShowPlanModal(false); setShowConfirmApprove(true); }}
                                 className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700"
                             >
-                                Approve Plan
+                                {t('approvePlan')}
                             </button>
                         </div>
                     </div>
@@ -490,13 +492,13 @@ const DraftCard = ({ draft, compact = false }: Props) => {
 
             <ReasonTagModal
                 open={showConfirmApprove}
-                title="Approve Draft"
+                title={t('approveDraft')}
                 onSubmit={handleApprove}
                 onCancel={() => setShowConfirmApprove(false)}
             />
             <ReasonTagModal
                 open={showRejectModal}
-                title="Reject Draft"
+                title={t('rejectDraft')}
                 onSubmit={handleReject}
                 onCancel={() => setShowRejectModal(false)}
             />

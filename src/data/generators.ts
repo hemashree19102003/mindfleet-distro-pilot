@@ -206,8 +206,8 @@ export const INITIAL_DRAFTS: DraftCard[] = [
     {
         id: 'draft1',
         type: 'DISPATCH_PLAN',
-        title: 'Draft Dispatch Plan – 17 Feb',
-        description: 'AI-generated plan for 100 shops across 13 active staff',
+        title: 'genDispatchPlan',
+        description: 'aiAnalyzeDispatch',
         summary: [
             '100 shops assigned to 13 staff members',
             'Estimated revenue: ₹4.8L',
@@ -220,7 +220,7 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         updatedAt: '2025-02-17T08:02:00',
         createdBy: 'AI',
         payload: { planId: 'dp1' },
-        explanation: 'Historical demand patterns show 17 Feb as a high-demand day (+12% vs average). Staff allocation weighted by zone density and delivery SLA windows. Route optimization reduced total distance by 18% vs manual planning.',
+        explanation: 'aiAnalyzeDispatch',
         risks: [
             { level: 'WARN', text: 'Karthik V. route exceeds 6h limit' },
             { level: 'INFO', text: '2 shops using approximated locations' }
@@ -230,7 +230,7 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         id: 'draft2',
         type: 'INVENTORY_ADJUSTMENT',
         title: 'Inventory Adjustment – Milk 500ml',
-        description: 'Adjust stock level for Milk 500ml in Zone A',
+        description: 'aiAnalyzeInventory',
         summary: [
             'Increase Milk 500ml by 50 units',
             'Warehouse: WH-CHENNAI-1',
@@ -242,7 +242,7 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         updatedAt: '2025-02-17T10:00:00',
         createdBy: 'Priya Menon',
         payload: { skuId: 'sku1', adjustment: 50 },
-        explanation: 'Stock below threshold. Recommend adding 50 units from warehouse.',
+        explanation: 'aiAnalyzeInventory',
         risks: [
             { level: 'CRITICAL', text: 'Stockout imminent (4h)' }
         ]
@@ -251,7 +251,7 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         id: 'draft3',
         type: 'INVOICE_UPDATE',
         title: 'Invoice Batch – 62 Invoices',
-        description: 'Generate invoices for all delivered stops today',
+        description: 'aiAnalyzeInvoice',
         summary: [
             '62 invoices to be generated',
             'Total value: ₹3.25L',
@@ -263,7 +263,7 @@ export const INITIAL_DRAFTS: DraftCard[] = [
         updatedAt: '2025-02-17T14:00:00',
         createdBy: 'AI',
         payload: { count: 62 },
-        explanation: 'All delivered stops eligible for invoicing. No credit-blocked shops included.',
+        explanation: 'aiAnalyzeInvoice',
         risks: [
             { level: 'INFO', text: 'All shops verified for credit limits' }
         ]
@@ -277,34 +277,52 @@ export const INITIAL_CHAT: ChatMessage[] = [];
 // ─── AI Response Generator ────────────────────────────────────────────────────
 const aiResponses: Record<string, { content: string; draftType?: DraftCard['type'] }> = {
     dispatch: {
-        content: 'I\'ve analyzed today\'s demand patterns and generated an optimized dispatch plan. 13 active staff will cover 100 shops.',
+        content: 'aiAnalyzeDispatch',
         draftType: 'DISPATCH_PLAN',
     },
     inventory: {
-        content: 'I\'ve reviewed inventory levels. Milk 500ml and Bread White are below threshold. Recommend immediate stock adjustment.',
+        content: 'aiAnalyzeInventory',
         draftType: 'INVENTORY_ADJUSTMENT',
     },
     invoice: {
-        content: 'I\'ve identified 62 delivered stops eligible for invoicing. Total value: ₹4,82,000. Shall I generate the invoice batch?',
+        content: 'aiAnalyzeInvoice',
         draftType: 'INVOICE_UPDATE',
     },
     risk: {
-        content: 'Current risks: 4 shops at SLA risk, 2 low-stock SKUs, 1 staff over capacity. Recommend immediate rebalancing.',
+        content: 'aiAnalyzeRisk',
     },
     default: {
-        content: 'I\'ve analyzed the request. Here\'s what I recommend based on current operational data and historical patterns.',
+        content: 'aiAnalyzeDefault',
     },
 };
 
 export function generateAIResponse(userMessage: string): { content: string; draftType?: DraftCard['type'] } {
     const lower = userMessage.toLowerCase();
-    if (lower.includes('dispatch') || lower.includes('plan') || lower.includes('route')) return aiResponses.dispatch;
-    if (lower.includes('inventory') || lower.includes('stock')) return aiResponses.inventory;
-    if (lower.includes('invoice') || lower.includes('payment')) return aiResponses.invoice;
-    if (lower.includes('risk') || lower.includes('warning') || lower.includes('alert')) return aiResponses.risk;
+
+    // Dispatch / Plan / Route
+    const isDispatch = lower.includes('dispatch') || lower.includes('plan') || lower.includes('route') ||
+        lower.includes('விநியோகம்') || lower.includes('திட்டம்') || lower.includes('வழி');
+    if (isDispatch) return aiResponses.dispatch;
+
+    // Inventory / Stock
+    const isInventory = lower.includes('inventory') || lower.includes('stock') ||
+        lower.includes('பங்கு') || lower.includes('சரக்கு');
+    if (isInventory) return aiResponses.inventory;
+
+    // Invoice / Payment
+    const isInvoice = lower.includes('invoice') || lower.includes('payment') ||
+        lower.includes('விலைப்பட்டியல்') || lower.includes('பணம்');
+    if (isInvoice) return aiResponses.invoice;
+
+    // Risk / Warning / Alert
+    const isRisk = lower.includes('risk') || lower.includes('warning') || lower.includes('alert') ||
+        lower.includes('அபாயம்') || lower.includes('எச்சரிக்கை');
+    if (isRisk) return aiResponses.risk;
+
+    // Onboarding
     if (lower.includes('add profile') || lower.includes('add person') || lower.includes('onboard')) {
         return {
-            content: 'I\'ve prepared a new staff profile template. Please fill in the details below:',
+            content: 'aiStaffProfileTemplate',
             draftType: 'ADD_STAFF'
         };
     }
@@ -314,28 +332,28 @@ export function generateAIResponse(userMessage: string): { content: string; draf
 export function createDraftFromAI(type: DraftCard['type'], createdBy: string): DraftCard {
     const templates: Record<DraftCard['type'], Partial<DraftCard>> = {
         DISPATCH_PLAN: {
-            title: `Draft Dispatch Plan – ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`,
-            description: 'AI-generated optimized dispatch plan',
-            summary: ['Optimized delivery routes', 'Workload-balanced staff', 'SLA window priority'],
-            explanation: 'Routes optimized for distance and workload balance using historical demand data.',
+            title: 'draftPlan',
+            description: 'dispatchDescription',
+            summary: ['optimizedRoutes', 'workloadBalanced', 'slaPriority'],
+            explanation: 'dispatchExplanation',
         },
         INVENTORY_ADJUSTMENT: {
-            title: 'Inventory Adjustment Request',
-            description: 'Stock level adjustment for low-inventory SKUs',
-            summary: ['Replenish safety stock', 'Inventory ledger update'],
-            explanation: 'Stock below safety threshold. Adjustment required to prevent stockout.',
+            title: 'inventoryAdjustmentRequest',
+            description: 'stockLevelAdjustment',
+            summary: ['replenishSafetyStock', 'inventoryLedgerUpdate'],
+            explanation: 'stockThresholdExplanation',
         },
         SHOP_IMPORT: {
-            title: 'New Shop Onboarding – AI Analysis',
-            description: 'AI-analyzed shop import from pending registrations',
-            summary: ['Batch import 42 new accounts', 'GPS coordinates verified for 38 shops', 'Credit risk assessment completed'],
-            explanation: 'Validated new shop entries against regional demographics. Optimized initial credit limits based on shop area and projected demand.',
+            title: 'newShopOnboardingAi',
+            description: 'shopImportAnalysis',
+            summary: ['batchImportNewAccounts', 'gpsVerifiedShops', 'creditRiskAssessment'],
+            explanation: 'shopImportExplanation',
         },
         INVOICE_GENERATION: {
-            title: 'Invoice Batch Generation',
-            description: 'Generate invoices for all delivered stops',
-            summary: ['Bulk invoice run', 'Digital signing ready'],
-            explanation: 'Only delivered stops included. Credit-blocked shops excluded.',
+            title: 'invoiceBatchGeneration',
+            description: 'generateInvoicesDelivered',
+            summary: ['bulkInvoiceRun', 'digitalSigningReady'],
+            explanation: 'invoiceGenerationExplanation',
         },
         INVENTORY_UPDATE: {
             title: 'Inventory Update',
@@ -398,10 +416,10 @@ export function createDraftFromAI(type: DraftCard['type'], createdBy: string): D
             explanation: 'Adjusting delivery days based on customer request or route efficiency.',
         },
         ADD_STAFF: {
-            title: 'New Staff Onboarding',
+            title: 'newShopOnboarding',
             description: 'Manual addition of a delivery partner to the fleet',
             summary: ['Awaiting personal details', 'Onboarding phase verification'],
-            explanation: 'Enter the details in the form below to register a new staff member.',
+            explanation: 'aiStaffProfileTemplate',
         },
     };
 
@@ -420,14 +438,14 @@ export function createDraftFromAI(type: DraftCard['type'], createdBy: string): D
         payload: type === 'DISPATCH_PLAN' ? { staffCount: rand(10, 15), shopCount: rand(80, 150) } : {},
         explanation: template.explanation,
         reasoning: [
-            "Optimized stop sequences to reduce backtracking by 14%",
-            "Prioritized premium shops with pending large outstanding collections",
-            "Allocated routes based on vehicle capacity utilization (avg 92%)"
+            "reasoningBacktracking",
+            "reasoningPremiumShops",
+            "reasoningVehicleCapacity"
         ],
         risks: [
-            { level: 'WARN', text: "2 shops have missing GPS coordinates (approximated)" },
-            { level: 'CRITICAL', text: "Milk 500ml stock may run out if demand exceeds 8% variance" },
-            { level: 'INFO', text: "Suresh Babu has a high-stop route (48 stops)" }
+            { level: 'WARN', text: "riskMissingGps" },
+            { level: 'CRITICAL', text: "riskMilkStock" },
+            { level: 'INFO', text: "riskHighStopRoute" }
         ],
         confidenceBreakdown: {
             dataQuality: rand(85, 95),

@@ -10,6 +10,7 @@ import { createDraftFromAI } from "@/data/generators";
 import DeliveryTable, { DeliveryRow } from "@/components/deliveries/DeliveryTable";
 import ExceptionsPanel from "@/components/deliveries/ExceptionsPanel";
 import RouteMap from "@/components/dispatch/RouteMap";
+import { useTranslation } from "@/hooks/useTranslation";
 
 
 const Deliveries = () => {
@@ -21,6 +22,7 @@ const Deliveries = () => {
   const { shops } = useShopStore();
   const { currentUser } = useUserStore();
   const { addDraft } = useDraftStore();
+  const { t } = useTranslation();
 
   // Combine data for monitoring
   const allStops = useMemo<DeliveryRow[]>(() => {
@@ -69,15 +71,15 @@ const Deliveries = () => {
     const draft = createDraftFromAI('REBALANCE', currentUser.name);
     draft.description = `Reassign ${failedStops.length} failed/skipped deliveries to nearest available staff`;
     addDraft(draft);
-    toast.success("Reassignment draft created for exceptions");
+    toast.success(t('reassignmentDraftCreated'));
   };
 
   return (
     <div className="space-y-6 pb-20 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Operations Monitoring</h1>
-          <p className="text-sm text-gray-500 font-medium">Real-time status of {allStops.length} scheduled stops</p>
+          <h1 className="text-2xl font-black text-gray-900 tracking-tight">{t('opsMonitoring')}</h1>
+          <p className="text-sm text-gray-500 font-medium">{t('realTimeStatusOf')} {allStops.length} {t('scheduledStops')}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex bg-gray-100 p-1 rounded-xl">
@@ -85,22 +87,22 @@ const Deliveries = () => {
               onClick={() => setActiveView('table')}
               className={`h-9 px-4 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeView === 'table' ? "bg-white text-purple-600 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
             >
-              <Layers className="h-4 w-4" /> TABLE
+              <Layers className="h-4 w-4" /> {t('table')}
             </button>
             <button
               onClick={() => setActiveView('map')}
               className={`h-9 px-4 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${activeView === 'map' ? "bg-white text-purple-600 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
             >
-              <MapPin className="h-4 w-4" /> MAP
+              <MapPin className="h-4 w-4" /> {t('map')}
             </button>
           </div>
           <button
             onClick={() => {
-              toast.success("Refreshing real-time status...");
+              toast.success(t('refreshingStatus'));
             }}
             className="h-10 px-4 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-600 shadow-sm hover:bg-gray-50 transition-all active:scale-95 flex items-center gap-2"
           >
-            <RefreshCw className="h-4 w-4" /> REFRESH
+            <RefreshCw className="h-4 w-4" /> {t('refresh')}
           </button>
         </div>
       </div>

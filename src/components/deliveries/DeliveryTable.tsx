@@ -2,6 +2,7 @@ import { AlertTriangle, Clock, MapPin, Search, RefreshCw, Filter } from "lucide-
 import StatusBadge from "@/components/shared/StatusBadge";
 import { VirtualizedTable } from "@/components/shared/VirtualizedTable";
 import { useState } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 // Mock types based on Spec
 export interface DeliveryRow {
@@ -32,6 +33,8 @@ interface Props {
 }
 
 const DeliveryTable = ({ rows, filters, onChangeFilters, onOpenStop }: Props) => {
+    const { t } = useTranslation();
+
     return (
         <div className="space-y-4">
             {/* Filters Bar */}
@@ -42,7 +45,7 @@ const DeliveryTable = ({ rows, filters, onChangeFilters, onOpenStop }: Props) =>
                         type="text"
                         value={filters.search}
                         onChange={(e) => onChangeFilters({ ...filters, search: e.target.value })}
-                        placeholder="Search shops, staff, area..."
+                        placeholder={t('searchDeliveriesPlaceholder')}
                         className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
                     />
                 </div>
@@ -52,11 +55,11 @@ const DeliveryTable = ({ rows, filters, onChangeFilters, onOpenStop }: Props) =>
                     onChange={(e) => onChangeFilters({ ...filters, status: e.target.value })}
                     className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none cursor-pointer hover:border-purple-300 transition-colors"
                 >
-                    <option value="All">All Status</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="DELIVERED">Delivered</option>
-                    <option value="FAILED">Failed</option>
-                    <option value="SKIPPED">Skipped</option>
+                    <option value="All">{t('allStatus')}</option>
+                    <option value="PENDING">{t('pendingStatus')}</option>
+                    <option value="DELIVERED">{t('deliveredStatus')}</option>
+                    <option value="FAILED">{t('failedStatus')}</option>
+                    <option value="SKIPPED">{t('skippedStatus')}</option>
                 </select>
 
                 {/* Additional filters can go here */}
@@ -70,12 +73,12 @@ const DeliveryTable = ({ rows, filters, onChangeFilters, onOpenStop }: Props) =>
                     rowHeight={64}
                     header={
                         <div className="flex items-center px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 border-b border-gray-100">
-                            <div className="w-16">Status</div>
-                            <div className="flex-1 min-w-[200px]">Shop & Location</div>
-                            <div className="w-40">Assigned Staff</div>
-                            <div className="w-24 text-right">ETA</div>
-                            <div className="w-24 text-center">Risk</div>
-                            <div className="w-24 text-right pr-4">Action</div>
+                            <div className="w-16">{t('statusLabel')}</div>
+                            <div className="flex-1 min-w-[200px]">{t('shopLocationLabel')}</div>
+                            <div className="w-40">{t('assignedStaffLabel')}</div>
+                            <div className="w-24 text-right">{t('etaLabel')}</div>
+                            <div className="w-24 text-center">{t('riskLabel')}</div>
+                            <div className="w-24 text-right pr-4">{t('action')}</div>
                         </div>
                     }
                     renderRow={(row) => (
@@ -106,14 +109,14 @@ const DeliveryTable = ({ rows, filters, onChangeFilters, onOpenStop }: Props) =>
                             </div>
                             <div className="w-24 text-center flex justify-center">
                                 {row.slaRisk && (
-                                    <div className="bg-red-50 text-red-500 p-1.5 rounded-lg" title="SLA Risk">
+                                    <div className="bg-red-50 text-red-500 p-1.5 rounded-lg" title={t('riskLabel')}>
                                         <AlertTriangle className="h-3.5 w-3.5" />
                                     </div>
                                 )}
                             </div>
                             <div className="w-24 text-right pr-4">
                                 <button className="text-[10px] font-bold text-gray-400 hover:text-purple-600 uppercase tracking-widest">
-                                    DETAILS
+                                    {t('details')}
                                 </button>
                             </div>
                         </div>

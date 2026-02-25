@@ -30,6 +30,7 @@ interface DeliveryPaymentProps {
         deviceId: string;
     }) => void;
     onCancel: () => void;
+    t: any;
 }
 
 // ─── Mock order items for demo ───────────────────────────────────────
@@ -62,6 +63,7 @@ const DeliveryPaymentScreen = ({
     currentGps,
     onComplete,
     onCancel,
+    t,
 }: DeliveryPaymentProps) => {
     const [itemsExpanded, setItemsExpanded] = useState(false);
     const [amountReceived, setAmountReceived] = useState("");
@@ -113,7 +115,7 @@ const DeliveryPaymentScreen = ({
 
         if (newErrors.length > 0) {
             setErrors(newErrors);
-            toast.error("Please complete required fields.");
+            toast.error(t('completeRequiredFields') || "Please complete required fields.");
             return;
         }
 
@@ -125,7 +127,7 @@ const DeliveryPaymentScreen = ({
                 amountReceived: receivedNum,
                 balance,
                 proofImage: proofImage!,
-                reason: reason || "Full Payment",
+                reason: reason || t('fullPayment') || "Full Payment",
                 gps: currentGps,
                 timestamp: new Date().toISOString(),
                 deviceId: `DEV_${navigator.userAgent.slice(-8)}`,
@@ -159,9 +161,9 @@ const DeliveryPaymentScreen = ({
                     className="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
                 >
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">📦 ORDER SUMMARY</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">📦 {t('orderSummary')}</span>
                         <span className="bg-purple-100 text-purple-700 text-[10px] font-black px-2 py-0.5 rounded-full">
-                            {totalItems} items
+                            {totalItems} {t('items')}
                         </span>
                     </div>
                     {itemsExpanded
@@ -185,7 +187,7 @@ const DeliveryPaymentScreen = ({
                             </div>
                         ))}
                         <div className="flex justify-between pt-2 border-t border-gray-300 mt-2">
-                            <span className="text-sm font-bold text-gray-600">Subtotal</span>
+                            <span className="text-sm font-bold text-gray-600">{t('subtotal')}</span>
                             <span className="text-sm font-black text-gray-900">₹{subtotal.toLocaleString()}</span>
                         </div>
                     </div>
@@ -194,14 +196,14 @@ const DeliveryPaymentScreen = ({
 
             {/* ─── EXPECTED AMOUNT ─────────────────────────────────── */}
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-4 border border-purple-100">
-                <p className="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">EXPECTED AMOUNT</p>
+                <p className="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">{t('expectedAmountLabel')}</p>
                 <p className="text-3xl font-black text-gray-900">₹{expectedAmount.toLocaleString()}</p>
             </div>
 
             {/* ─── AMOUNT RECEIVED ─────────────────────────────────── */}
             <div className={`rounded-2xl p-4 border-2 transition-colors ${errors.includes("amount") ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"
                 }`}>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">AMOUNT RECEIVED</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('amountReceivedLabel')}</p>
                 <div className="flex items-center gap-3">
                     <div className="flex items-center flex-1 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
                         <span className="pl-3 text-gray-400 font-bold">₹</span>
@@ -218,12 +220,12 @@ const DeliveryPaymentScreen = ({
                         onClick={handleQuickFill}
                         className="px-3 py-2 bg-green-100 text-green-700 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-green-200 active:scale-95 transition-all flex-shrink-0"
                     >
-                        EXACT
+                        {t('exact')}
                     </button>
                 </div>
                 {errors.includes("amount") && (
                     <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" /> Enter amount received
+                        <AlertCircle className="h-3 w-3" /> {t('enterAmountReceived')}
                     </p>
                 )}
             </div>
@@ -231,16 +233,16 @@ const DeliveryPaymentScreen = ({
             {/* ─── BALANCE ────────────────────────────────────────── */}
             {amountReceived && (
                 <div className={`rounded-2xl p-4 border ${balance === 0 ? "bg-green-50 border-green-200" :
-                        balance > 0 ? "bg-amber-50 border-amber-200" :
-                            "bg-blue-50 border-blue-200"
+                    balance > 0 ? "bg-amber-50 border-amber-200" :
+                        "bg-blue-50 border-blue-200"
                     }`}>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">BALANCE</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t('balanceLabel')}</p>
                     <div className="flex items-center justify-between">
                         <p className={`text-2xl font-black ${balance === 0 ? "text-green-600" :
-                                balance > 0 ? "text-amber-600" :
-                                    "text-blue-600"
+                            balance > 0 ? "text-amber-600" :
+                                "text-blue-600"
                             }`}>
-                            {balance === 0 ? "₹0 — Settled ✓" : `₹${Math.abs(balance).toLocaleString()} ${balance > 0 ? "pending" : "overpaid"}`}
+                            {balance === 0 ? `₹0 — ${t('settled')} ✓` : `₹${Math.abs(balance).toLocaleString()} ${balance > 0 ? t('pending') : t('overpaid')}`}
                         </p>
                     </div>
                 </div>
@@ -250,15 +252,15 @@ const DeliveryPaymentScreen = ({
             {needsReason && (
                 <div className={`rounded-2xl p-4 border-2 transition-colors ${errors.includes("reason") ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"
                     }`}>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">REASON FOR BALANCE</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('reasonForBalance')}</p>
                     <div className="grid grid-cols-2 gap-2">
                         {BALANCE_REASONS.map(r => (
                             <button
                                 key={r}
                                 onClick={() => { setReason(r); setErrors(prev => prev.filter(e => e !== "reason")); }}
                                 className={`p-2.5 rounded-xl text-xs font-bold border transition-all active:scale-95 ${reason === r
-                                        ? "border-amber-500 bg-amber-50 text-amber-700 ring-2 ring-amber-100"
-                                        : "border-gray-200 bg-white text-gray-600 hover:border-amber-200"
+                                    ? "border-amber-500 bg-amber-50 text-amber-700 ring-2 ring-amber-100"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-amber-200"
                                     }`}
                             >
                                 {r}
@@ -267,7 +269,7 @@ const DeliveryPaymentScreen = ({
                     </div>
                     {errors.includes("reason") && (
                         <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" /> Select a reason for pending balance
+                            <AlertCircle className="h-3 w-3" /> {t('selectReasonBalance')}
                         </p>
                     )}
                 </div>
@@ -276,7 +278,7 @@ const DeliveryPaymentScreen = ({
             {/* ─── PROOF IMAGE ────────────────────────────────────── */}
             <div className={`rounded-2xl p-4 border-2 transition-colors ${errors.includes("proof") ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"
                 }`}>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">PROOF IMAGE</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{t('proofImageLabel')}</p>
 
                 {!proofImage ? (
                     <div>
@@ -293,12 +295,12 @@ const DeliveryPaymentScreen = ({
                             className="w-full py-4 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center gap-2 hover:border-purple-400 hover:bg-purple-50 active:scale-[0.98] transition-all"
                         >
                             <Camera className="h-8 w-8 text-gray-400" />
-                            <span className="text-xs font-bold text-gray-500">📷 Capture Photo</span>
-                            <span className="text-[10px] text-gray-400">Camera only — no gallery</span>
+                            <span className="text-xs font-bold text-gray-500">📷 {t('capturePhoto')}</span>
+                            <span className="text-[10px] text-gray-400">{t('cameraOnly')}</span>
                         </button>
                         {errors.includes("proof") && (
                             <p className="text-xs text-red-500 font-bold mt-2 flex items-center gap-1">
-                                <AlertCircle className="h-3 w-3" /> Proof image is required
+                                <AlertCircle className="h-3 w-3" /> {t('proofRequired')}
                             </p>
                         )}
                     </div>
@@ -316,7 +318,7 @@ const DeliveryPaymentScreen = ({
                             onClick={() => { setProofImage(null); }}
                             className="mt-2 text-xs font-bold text-gray-400 hover:text-red-500"
                         >
-                            Retake Photo
+                            {t('retakePhoto')}
                         </button>
                         {/* Auto-attached metadata */}
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -340,25 +342,25 @@ const DeliveryPaymentScreen = ({
                     onClick={onCancel}
                     className="flex-1 py-4 text-gray-500 font-bold text-sm rounded-2xl border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all"
                 >
-                    CANCEL
+                    {t('cancel')}
                 </button>
                 <button
                     onClick={handleConfirm}
                     disabled={isConfirming}
                     className={`flex-[2] py-4 rounded-2xl text-sm font-black shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${isConfirming
-                            ? "bg-gray-400 text-white cursor-not-allowed"
-                            : "bg-green-500 text-white hover:bg-green-600 shadow-green-200"
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-green-500 text-white hover:bg-green-600 shadow-green-200"
                         }`}
                 >
                     {isConfirming ? (
                         <>
                             <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            CONFIRMING...
+                            {t('confirming')}
                         </>
                     ) : (
                         <>
                             <CheckCircle className="h-5 w-5" />
-                            CONFIRM DELIVERY
+                            {t('confirmDelivery')}
                         </>
                     )}
                 </button>
